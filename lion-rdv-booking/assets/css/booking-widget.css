@@ -1,0 +1,244 @@
+.lion-rdv-widget {
+	--lion-rdv-primary: #c0272d;
+	--lion-rdv-primary-dark: #98181d;
+	--lion-rdv-text: #1f2328;
+	--lion-rdv-muted: #6b7280;
+	--lion-rdv-border: #e2e2e2;
+	--lion-rdv-bg: #ffffff;
+	--lion-rdv-bg-soft: #f7f7f8;
+	--lion-rdv-radius: 10px;
+
+	max-width: 640px;
+	margin: 0 auto;
+	font-family: inherit;
+	color: var(--lion-rdv-text);
+	box-sizing: border-box;
+}
+
+.lion-rdv-widget *,
+.lion-rdv-widget *::before,
+.lion-rdv-widget *::after {
+	box-sizing: inherit;
+}
+
+.lion-rdv-widget h2,
+.lion-rdv-widget h3 {
+	margin: 0 0 1rem;
+	font-size: 1.25rem;
+}
+
+.lion-rdv-step {
+	background: var(--lion-rdv-bg);
+	border: 1px solid var(--lion-rdv-border);
+	border-radius: var(--lion-rdv-radius);
+	padding: 1.5rem;
+}
+
+.lion-rdv-service-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1rem;
+}
+
+@media (max-width: 480px) {
+	.lion-rdv-service-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.lion-rdv-service-card {
+	display: block;
+	width: 100%;
+	text-align: left;
+	background: var(--lion-rdv-bg-soft);
+	border: 2px solid var(--lion-rdv-border);
+	border-radius: var(--lion-rdv-radius);
+	padding: 1.25rem;
+	cursor: pointer;
+	font: inherit;
+	color: inherit;
+	transition: border-color 0.15s ease, transform 0.05s ease;
+}
+
+.lion-rdv-service-card:hover,
+.lion-rdv-service-card:focus-visible {
+	border-color: var(--lion-rdv-primary);
+}
+
+.lion-rdv-service-card strong {
+	display: block;
+	font-size: 1.05rem;
+	margin-bottom: 0.25rem;
+}
+
+.lion-rdv-service-card span {
+	color: var(--lion-rdv-muted);
+	font-size: 0.9rem;
+}
+
+.lion-rdv-back {
+	background: none;
+	border: none;
+	color: var(--lion-rdv-primary);
+	font: inherit;
+	cursor: pointer;
+	padding: 0;
+	margin-bottom: 1rem;
+}
+
+.lion-rdv-days {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-bottom: 1.25rem;
+}
+
+.lion-rdv-day-btn {
+	border: 1px solid var(--lion-rdv-border);
+	background: var(--lion-rdv-bg-soft);
+	border-radius: 8px;
+	padding: 0.5rem 0.85rem;
+	font: inherit;
+	font-size: 0.9rem;
+	cursor: pointer;
+	text-transform: capitalize;
+}
+
+.lion-rdv-day-btn.is-active,
+.lion-rdv-day-btn:hover {
+	background: var(--lion-rdv-primary);
+	border-color: var(--lion-rdv-primary);
+	color: #fff;
+}
+
+.lion-rdv-slots {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+	gap: 0.6rem;
+}
+
+.lion-rdv-slot-btn {
+	border: 1px solid var(--lion-rdv-border);
+	background: var(--lion-rdv-bg);
+	border-radius: 8px;
+	padding: 0.6rem 0.5rem;
+	font: inherit;
+	font-size: 0.9rem;
+	cursor: pointer;
+}
+
+.lion-rdv-slot-btn:hover,
+.lion-rdv-slot-btn:focus-visible {
+	border-color: var(--lion-rdv-primary);
+	color: var(--lion-rdv-primary);
+}
+
+.lion-rdv-summary {
+	background: var(--lion-rdv-bg-soft);
+	border-radius: var(--lion-rdv-radius);
+	padding: 0.9rem 1rem;
+	margin-bottom: 1.25rem;
+	font-size: 0.95rem;
+}
+
+.lion-rdv-form-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.9rem;
+}
+
+.lion-rdv-form-grid .lion-rdv-full {
+	grid-column: 1 / -1;
+}
+
+@media (max-width: 480px) {
+	.lion-rdv-form-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.lion-rdv-field label {
+	display: block;
+	font-size: 0.85rem;
+	margin-bottom: 0.3rem;
+	color: var(--lion-rdv-muted);
+}
+
+.lion-rdv-field input,
+.lion-rdv-field textarea {
+	width: 100%;
+	padding: 0.6rem 0.7rem;
+	border: 1px solid var(--lion-rdv-border);
+	border-radius: 8px;
+	font: inherit;
+	font-size: 0.95rem;
+}
+
+.lion-rdv-field input:focus,
+.lion-rdv-field textarea:focus {
+	outline: 2px solid var(--lion-rdv-primary);
+	outline-offset: 1px;
+}
+
+.lion-rdv-honeypot {
+	position: absolute;
+	left: -9999px;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+}
+
+.lion-rdv-submit {
+	margin-top: 1.25rem;
+	background: var(--lion-rdv-primary);
+	color: #fff;
+	border: none;
+	border-radius: 8px;
+	padding: 0.75rem 1.5rem;
+	font: inherit;
+	font-size: 1rem;
+	font-weight: 600;
+	cursor: pointer;
+	width: 100%;
+}
+
+.lion-rdv-submit:hover {
+	background: var(--lion-rdv-primary-dark);
+}
+
+.lion-rdv-submit:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.lion-rdv-message {
+	padding: 0.9rem 1rem;
+	border-radius: 8px;
+	margin-bottom: 1rem;
+	font-size: 0.9rem;
+}
+
+.lion-rdv-message.is-error {
+	background: #fdecea;
+	color: #9d2126;
+}
+
+.lion-rdv-message.is-success {
+	background: #eaf6ec;
+	color: #1a7f37;
+}
+
+.lion-rdv-confirmation {
+	text-align: center;
+	padding: 2rem 1rem;
+}
+
+.lion-rdv-confirmation .lion-rdv-icon {
+	font-size: 2.5rem;
+	margin-bottom: 0.75rem;
+}
+
+.lion-rdv-loading {
+	color: var(--lion-rdv-muted);
+	padding: 1rem 0;
+}
