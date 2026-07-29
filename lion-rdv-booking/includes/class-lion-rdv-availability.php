@@ -102,7 +102,10 @@ class Lion_RDV_Availability {
 							);
 						}
 
-						$slot_start = $slot_start->modify( "+{$step_minutes} minutes" );
+						// L'intervalle s'ajoute APRÈS la fin du rendez-vous (battement),
+						// jamais pendant : deux créneaux proposés ne se chevauchent
+						// donc jamais, quelle que soit la durée du service.
+						$slot_start = $slot_start->modify( '+' . ( $duration_minutes + $step_minutes ) . ' minutes' );
 					}
 				}
 

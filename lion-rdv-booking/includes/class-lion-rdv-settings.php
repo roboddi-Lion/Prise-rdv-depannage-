@@ -170,7 +170,7 @@ class Lion_RDV_Settings {
 		);
 
 		$clean['horizon_days']       = max( 1, min( 180, (int) ( $input['horizon_days'] ?? $defaults['horizon_days'] ) ) );
-		$clean['slot_step_minutes']  = max( 5, (int) ( $input['slot_step_minutes'] ?? $defaults['slot_step_minutes'] ) );
+		$clean['slot_step_minutes']  = max( 0, (int) ( $input['slot_step_minutes'] ?? $defaults['slot_step_minutes'] ) );
 
 		$email                       = isset( $input['notification_email'] ) ? sanitize_email( $input['notification_email'] ) : '';
 		$clean['notification_email'] = $email ? $email : $defaults['notification_email'];

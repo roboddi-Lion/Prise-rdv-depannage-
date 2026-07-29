@@ -140,8 +140,11 @@ $day_labels = array(
 				<td><input type="number" min="1" max="180" id="horizon_days" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[horizon_days]" value="<?php echo esc_attr( $settings['horizon_days'] ); ?>" class="small-text" /></td>
 			</tr>
 			<tr>
-				<th scope="row"><label for="slot_step_minutes"><?php esc_html_e( 'Intervalle entre créneaux proposés (min)', 'lion-rdv-booking' ); ?></label></th>
-				<td><input type="number" min="5" step="5" id="slot_step_minutes" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[slot_step_minutes]" value="<?php echo esc_attr( $settings['slot_step_minutes'] ); ?>" class="small-text" /></td>
+				<th scope="row"><label for="slot_step_minutes"><?php esc_html_e( 'Battement entre deux rendez-vous (min)', 'lion-rdv-booking' ); ?></label></th>
+				<td>
+					<input type="number" min="0" step="5" id="slot_step_minutes" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[slot_step_minutes]" value="<?php echo esc_attr( $settings['slot_step_minutes'] ); ?>" class="small-text" />
+					<p class="description"><?php esc_html_e( 'Temps ajouté après la fin d\'un rendez-vous avant que le suivant puisse commencer (trajet, imprévu...). 0 = rendez-vous proposés bout à bout, sans battement.', 'lion-rdv-booking' ); ?></p>
+				</td>
 			</tr>
 			<tr>
 				<th scope="row"><label for="notification_email"><?php esc_html_e( 'Email de notification interne', 'lion-rdv-booking' ); ?></label></th>
