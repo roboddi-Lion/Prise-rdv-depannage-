@@ -17,15 +17,24 @@ class Lion_RDV_Availability {
 	}
 
 	/**
-	 * @param string $service_type 'depannage' ou 'entretien'
+	 * @param string $service_type Clé d'un service configuré dans Lion_RDV_Settings::default_services().
 	 * @return array{success:bool,error:?string,days:array}
 	 */
 	public function get_available_slots( $service_type ) {
 		$settings = Lion_RDV_Settings::get_settings();
 		$tz       = wp_timezone();
 
-		$duration_minutes = 'entretien' === $service_type ? (int) $settings['duration_entretien'] : (int) $settings['duration_depannage'];
-		$lead_hours        = 'entretien' === $service_type ? (int) $settings['lead_time_entretien'] : (int) $settings['lead_time_depannage'];
+		if ( ! isset( $settings['services'][ $service_type ] ) ) {
+			return array(
+				'success' => false,
+				'error'   => __( 'Type de rendez-vous inconnu.', 'lion-rdv-booking' ),
+				'days'    => array(),
+			);
+		}
+
+		$service           = $settings['services'][ $service_type ];
+		$duration_minutes  = (int) $service['duration_minutes'];
+		$lead_hours        = (int) $service['lead_time_hours'];
 		$horizon_days      = (int) $settings['horizon_days'];
 		$step_minutes      = (int) $settings['slot_step_minutes'];
 

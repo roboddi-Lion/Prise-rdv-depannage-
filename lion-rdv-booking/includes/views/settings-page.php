@@ -54,7 +54,7 @@ $day_labels = array(
 				?>
 				</p>
 				<?php if ( ! empty( $test_result['report_types'] ) ) : ?>
-					<p><strong><?php esc_html_e( 'Modèles de rapport disponibles (à copier dans le champ « ID de modèle de rapport » ci-dessous) :', 'lion-rdv-booking' ); ?></strong></p>
+					<p><strong><?php esc_html_e( 'Modèles de rapport disponibles (à copier dans la colonne « ID de modèle de rapport » du tableau ci-dessous, pour chaque type de rendez-vous) :', 'lion-rdv-booking' ); ?></strong></p>
 					<ul style="list-style:disc;margin-left:20px;">
 						<?php foreach ( $test_result['report_types'] as $type ) : ?>
 							<li><code><?php echo esc_html( $type['id'] ); ?></code> — <?php echo esc_html( $type['name'] ); ?></li>
@@ -96,48 +96,41 @@ $day_labels = array(
 					<p class="description"><?php esc_html_e( 'Identifiant numérique d\'un utilisateur InterFast (technicien). Laissez vide pour vérifier la disponibilité sur l\'ensemble du planning ; renseigné, les créneaux seront limités à ce technicien et les nouvelles interventions lui seront assignées.', 'lion-rdv-booking' ); ?></p>
 				</td>
 			</tr>
-			<tr>
-				<th scope="row"><label for="interfast_report_type_id_depannage"><?php esc_html_e( 'ID de modèle de rapport - Dépannage', 'lion-rdv-booking' ); ?></label></th>
-				<td>
-					<input type="text" id="interfast_report_type_id_depannage" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[interfast_report_type_id_depannage]" value="<?php echo esc_attr( $settings['interfast_report_type_id_depannage'] ); ?>" class="regular-text" required />
-					<p class="description"><?php esc_html_e( 'Obligatoire (reportTypeId). Pré-rempli avec le modèle « Dépannage ». Cliquez sur « Tester la connexion » ci-dessous pour voir tous vos modèles disponibles et en choisir un autre si besoin.', 'lion-rdv-booking' ); ?></p>
-				</td>
-			</tr>
-			<tr>
-				<th scope="row"><label for="interfast_report_type_id_entretien"><?php esc_html_e( 'ID de modèle de rapport - Entretien', 'lion-rdv-booking' ); ?></label></th>
-				<td>
-					<input type="text" id="interfast_report_type_id_entretien" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[interfast_report_type_id_entretien]" value="<?php echo esc_attr( $settings['interfast_report_type_id_entretien'] ); ?>" class="regular-text" required />
-					<p class="description"><?php esc_html_e( 'Obligatoire (reportTypeId). Pré-rempli avec le modèle « Entretien de chaudière à gaz ». Si vos entretiens concernent aussi le fioul, le bois ou les poêles, choisissez un autre modèle dans la liste (ou dupliquez/adaptez la logique par type d\'énergie plus tard si besoin).', 'lion-rdv-booking' ); ?></p>
-				</td>
-			</tr>
 		</table>
 
-		<h2><?php esc_html_e( 'Types d\'intervention', 'lion-rdv-booking' ); ?></h2>
+		<h2><?php esc_html_e( 'Types de rendez-vous proposés', 'lion-rdv-booking' ); ?></h2>
+		<p class="description"><?php esc_html_e( 'Chaque type de rendez-vous a son propre modèle de rapport InterFast (reportTypeId, obligatoire). Cliquez sur « Tester la connexion » plus bas pour voir la liste de vos modèles disponibles et copier le bon ID.', 'lion-rdv-booking' ); ?></p>
+		<table class="widefat" style="max-width:1100px;margin-bottom:1.5em;">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Nom affiché', 'lion-rdv-booking' ); ?></th>
+					<th><?php esc_html_e( 'Description affichée', 'lion-rdv-booking' ); ?></th>
+					<th><?php esc_html_e( 'Durée (min)', 'lion-rdv-booking' ); ?></th>
+					<th><?php esc_html_e( 'Préavis min. (h)', 'lion-rdv-booking' ); ?></th>
+					<th><?php esc_html_e( 'Priorité', 'lion-rdv-booking' ); ?></th>
+					<th><?php esc_html_e( 'ID de modèle de rapport (reportTypeId)', 'lion-rdv-booking' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php foreach ( $settings['services'] as $service_key => $service ) : ?>
+				<tr>
+					<td><input type="text" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[services][<?php echo esc_attr( $service_key ); ?>][label]" value="<?php echo esc_attr( $service['label'] ); ?>" class="regular-text" /></td>
+					<td><input type="text" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[services][<?php echo esc_attr( $service_key ); ?>][description]" value="<?php echo esc_attr( $service['description'] ); ?>" class="regular-text" /></td>
+					<td><input type="number" min="15" step="15" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[services][<?php echo esc_attr( $service_key ); ?>][duration_minutes]" value="<?php echo esc_attr( $service['duration_minutes'] ); ?>" class="small-text" /></td>
+					<td><input type="number" min="0" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[services][<?php echo esc_attr( $service_key ); ?>][lead_time_hours]" value="<?php echo esc_attr( $service['lead_time_hours'] ); ?>" class="small-text" /></td>
+					<td>
+						<select name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[services][<?php echo esc_attr( $service_key ); ?>][importance_level]">
+							<option value="normal" <?php selected( $service['importance_level'], 'normal' ); ?>><?php esc_html_e( 'Normale', 'lion-rdv-booking' ); ?></option>
+							<option value="high" <?php selected( $service['importance_level'], 'high' ); ?>><?php esc_html_e( 'Haute', 'lion-rdv-booking' ); ?></option>
+						</select>
+					</td>
+					<td><input type="text" required name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[services][<?php echo esc_attr( $service_key ); ?>][report_type_id]" value="<?php echo esc_attr( $service['report_type_id'] ); ?>" class="regular-text" /></td>
+				</tr>
+			<?php endforeach; ?>
+			</tbody>
+		</table>
+
 		<table class="form-table" role="presentation">
-			<tr>
-				<th scope="row"><?php esc_html_e( 'Dépannage', 'lion-rdv-booking' ); ?></th>
-				<td>
-					<label><?php esc_html_e( 'Durée (min)', 'lion-rdv-booking' ); ?>
-						<input type="number" min="15" step="15" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[duration_depannage]" value="<?php echo esc_attr( $settings['duration_depannage'] ); ?>" class="small-text" />
-					</label>
-					&nbsp;&nbsp;
-					<label><?php esc_html_e( 'Préavis minimum (heures)', 'lion-rdv-booking' ); ?>
-						<input type="number" min="0" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[lead_time_depannage]" value="<?php echo esc_attr( $settings['lead_time_depannage'] ); ?>" class="small-text" />
-					</label>
-				</td>
-			</tr>
-			<tr>
-				<th scope="row"><?php esc_html_e( 'Entretien', 'lion-rdv-booking' ); ?></th>
-				<td>
-					<label><?php esc_html_e( 'Durée (min)', 'lion-rdv-booking' ); ?>
-						<input type="number" min="15" step="15" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[duration_entretien]" value="<?php echo esc_attr( $settings['duration_entretien'] ); ?>" class="small-text" />
-					</label>
-					&nbsp;&nbsp;
-					<label><?php esc_html_e( 'Préavis minimum (heures)', 'lion-rdv-booking' ); ?>
-						<input type="number" min="0" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[lead_time_entretien]" value="<?php echo esc_attr( $settings['lead_time_entretien'] ); ?>" class="small-text" />
-					</label>
-				</td>
-			</tr>
 			<tr>
 				<th scope="row"><label for="horizon_days"><?php esc_html_e( 'Réservable jusqu\'à (jours à l\'avance)', 'lion-rdv-booking' ); ?></label></th>
 				<td><input type="number" min="1" max="180" id="horizon_days" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[horizon_days]" value="<?php echo esc_attr( $settings['horizon_days'] ); ?>" class="small-text" /></td>

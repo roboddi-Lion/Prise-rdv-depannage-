@@ -69,39 +69,24 @@
 
 		var grid = el( 'div', { class: 'lion-rdv-service-grid' } );
 
-		grid.appendChild(
-			el(
-				'button',
-				{
-					type: 'button',
-					class: 'lion-rdv-service-card',
-					onclick: function () {
-						selectService( 'depannage' );
+		( lionRdvSettings.services || [] ).forEach( function ( service ) {
+			grid.appendChild(
+				el(
+					'button',
+					{
+						type: 'button',
+						class: 'lion-rdv-service-card',
+						onclick: function () {
+							selectService( service.key );
+						},
 					},
-				},
-				[
-					el( 'strong', { text: i18n.depannage } ),
-					el( 'span', { text: i18n.depannageDesc } ),
-				]
-			)
-		);
-
-		grid.appendChild(
-			el(
-				'button',
-				{
-					type: 'button',
-					class: 'lion-rdv-service-card',
-					onclick: function () {
-						selectService( 'entretien' );
-					},
-				},
-				[
-					el( 'strong', { text: i18n.entretien } ),
-					el( 'span', { text: i18n.entretienDesc } ),
-				]
-			)
-		);
+					[
+						el( 'strong', { text: service.label } ),
+						el( 'span', { text: service.description } ),
+					]
+				)
+			);
+		} );
 
 		stepEl.appendChild( grid );
 		root.appendChild( stepEl );

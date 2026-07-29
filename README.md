@@ -14,17 +14,29 @@ de l'agenda **InterFast**.
    - votre **clé API InterFast** (générée dans InterFast : *Profil > Sécurité*)
    - l'**URL de base de l'API** InterFast (`https://app.inter-fast.fr`)
    - les **horaires d'ouverture** par jour (matin / après-midi)
-   - les **durées** et **délais de préavis** pour le dépannage et l'entretien
    - l'**email de notification interne** (par défaut : l'email admin du site)
-   - les **ID de modèle de rapport** Dépannage et Entretien (`reportTypeId`,
-     obligatoires) — préremplis avec les modèles « Dépannage » et « Entretien
-     de chaudière à gaz », à ajuster si besoin (voir étape suivante)
+   - le tableau **« Types de rendez-vous proposés »** : trois lignes
+     préconfigurées (Dépannage, Entretien chaudière, Entretien climatisation
+     / PAC), chacune avec son nom affiché, sa description, sa durée, son
+     préavis minimum, sa priorité et son **ID de modèle de rapport**
+     (`reportTypeId`, obligatoire)
 4. Cliquez sur **« Tester la connexion InterFast »** : la liste complète de
-   vos modèles de rapport InterFast s'affiche, pour changer l'un ou l'autre
-   des deux ID si les valeurs préremplies ne correspondent pas à votre
-   activité (ex. entretien de chaudière fioul/bois plutôt que gaz).
+   vos modèles de rapport InterFast s'affiche, pour ajuster l'ID de modèle
+   d'une ligne si la valeur préremplie ne correspond pas à votre activité
+   (ex. entretien de chaudière fioul/bois plutôt que gaz).
 5. Ajoutez le shortcode `[lion_rdv_booking]` sur la page « Prise de rendez-vous »
    de votre site.
+
+### Ajouter un nouveau type de rendez-vous
+
+La liste des services proposés (label, description, durée, préavis,
+priorité, modèle de rapport) est centralisée dans
+`Lion_RDV_Settings::default_services()`
+(`lion-rdv-booking/includes/class-lion-rdv-settings.php`). Pour ajouter un
+quatrième type de rendez-vous (ex. « Dépannage électrique »), ajoutez une
+entrée avec une nouvelle clé dans ce tableau — elle apparaîtra
+automatiquement dans les réglages et dans le widget public, sans autre
+modification de code.
 
 ## Intégration InterFast
 
@@ -65,7 +77,8 @@ réglages.
 
 ## Fonctionnement
 
-1. Le visiteur choisit **Dépannage** ou **Entretien**.
+1. Le visiteur choisit son type de rendez-vous (Dépannage, Entretien
+   chaudière, Entretien climatisation / PAC, ou tout autre service ajouté).
 2. Le plugin interroge InterFast pour connaître les événements déjà planifiés
    sur les prochains jours, puis calcule les créneaux encore libres à partir
    de vos horaires d'ouverture.

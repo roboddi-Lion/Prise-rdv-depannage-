@@ -8,6 +8,7 @@ if ( ! current_user_can( 'manage_options' ) ) {
 }
 
 $bookings = Lion_RDV_DB::get_recent_bookings( 100 );
+$services = Lion_RDV_Settings::get_settings()['services'];
 
 $status_labels = array(
 	'confirmed' => __( 'Confirmée', 'lion-rdv-booking' ),
@@ -40,7 +41,7 @@ $status_labels = array(
 			<tr>
 				<td><?php echo esc_html( mysql2date( 'd/m/Y H:i', $booking->created_at ) ); ?></td>
 				<td><?php echo esc_html( mysql2date( 'd/m/Y H:i', $booking->slot_start ) . ' - ' . mysql2date( 'H:i', $booking->slot_end ) ); ?></td>
-				<td><?php echo esc_html( 'entretien' === $booking->service_type ? __( 'Entretien', 'lion-rdv-booking' ) : __( 'Dépannage', 'lion-rdv-booking' ) ); ?></td>
+				<td><?php echo esc_html( $services[ $booking->service_type ]['label'] ?? $booking->service_type ); ?></td>
 				<td><?php echo esc_html( $booking->first_name . ' ' . $booking->last_name ); ?></td>
 				<td><?php echo esc_html( $booking->phone ); ?><br /><?php echo esc_html( $booking->email ); ?></td>
 				<td><?php echo esc_html( $booking->address . ', ' . $booking->postal_code . ' ' . $booking->city ); ?></td>

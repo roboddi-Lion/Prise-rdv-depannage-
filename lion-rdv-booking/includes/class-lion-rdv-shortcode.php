@@ -28,17 +28,23 @@ class Lion_RDV_Shortcode {
 			true
 		);
 
+		$services = array();
+		foreach ( Lion_RDV_Settings::get_settings()['services'] as $key => $service ) {
+			$services[] = array(
+				'key'         => $key,
+				'label'       => $service['label'],
+				'description' => $service['description'],
+			);
+		}
+
 		wp_localize_script(
 			'lion-rdv-booking',
 			'lionRdvSettings',
 			array(
-				'restUrl' => esc_url_raw( rest_url( 'lion-rdv/v1' ) ),
+				'restUrl'  => esc_url_raw( rest_url( 'lion-rdv/v1' ) ),
+				'services' => $services,
 				'i18n'    => array(
 					'chooseService'   => __( 'Quel type de rendez-vous souhaitez-vous prendre ?', 'lion-rdv-booking' ),
-					'depannage'       => __( 'Dépannage', 'lion-rdv-booking' ),
-					'depannageDesc'   => __( 'Panne, urgence, intervention rapide', 'lion-rdv-booking' ),
-					'entretien'       => __( 'Entretien', 'lion-rdv-booking' ),
-					'entretienDesc'   => __( 'Maintenance programmée', 'lion-rdv-booking' ),
 					'loadingSlots'    => __( 'Chargement des créneaux disponibles…', 'lion-rdv-booking' ),
 					'noSlots'         => __( 'Aucun créneau disponible pour le moment. Merci de nous contacter directement.', 'lion-rdv-booking' ),
 					'chooseDay'       => __( 'Choisissez un jour', 'lion-rdv-booking' ),

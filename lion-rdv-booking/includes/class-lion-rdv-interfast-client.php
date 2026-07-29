@@ -19,18 +19,15 @@ class Lion_RDV_Interfast_Client {
 	private $api_key;
 	private $base_url;
 	private $resource_id;
-	private $report_type_ids;
+	private $services;
 
 	public function __construct( $api_key = null, $base_url = null, $resource_id = null ) {
 		$settings = Lion_RDV_Settings::get_settings();
 
-		$this->api_key        = null !== $api_key ? $api_key : $settings['interfast_api_key'];
-		$this->base_url       = rtrim( null !== $base_url ? $base_url : $settings['interfast_api_base_url'], '/' );
-		$this->resource_id    = null !== $resource_id ? $resource_id : $settings['interfast_resource_id'];
-		$this->report_type_ids = array(
-			'depannage' => $settings['interfast_report_type_id_depannage'],
-			'entretien' => $settings['interfast_report_type_id_entretien'],
-		);
+		$this->api_key     = null !== $api_key ? $api_key : $settings['interfast_api_key'];
+		$this->base_url    = rtrim( null !== $base_url ? $base_url : $settings['interfast_api_base_url'], '/' );
+		$this->resource_id = null !== $resource_id ? $resource_id : $settings['interfast_resource_id'];
+		$this->services    = $settings['services'];
 	}
 
 	public function is_configured() {
@@ -114,7 +111,7 @@ class Lion_RDV_Interfast_Client {
 	 * @return array{success:bool,event_id:?string,error:?string,raw:mixed}
 	 */
 	public function create_event( array $booking ) {
-		if ( empty( $this->report_type_ids[ $booking['service_type'] ] ) ) {
+		if ( empty( $this->services[ $booking['service_type'] ]['report_type_id'] ) ) {
 			return array(
 				'success'  => false,
 				'event_id' => null,
@@ -377,26 +374,22 @@ class Lion_RDV_Interfast_Client {
 	 * reportTypeId, secondReference, title.
 	 */
 	private function build_intervention_payload( array $booking, $client_id, $address_id ) {
-		$title = sprintf(
-			'%s - %s %s',
-			'entretien' === $booking['service_type'] ? 'Entretien' : 'Dépannage',
-			$booking['first_name'],
-			$booking['last_name']
-		);
+		$service = $this->services[ $booking['service_type'] ];
+
+		$title = sprintf( '%s - %s %s', $service['label'], $booking['first_name'], $booking['last_name'] );
 
 		$payload = array(
-			'clientId'               => $client_id,
-			'addressId'              => $address_id,
-			'reportTypeId'           => $this->report_type_ids[ $booking['service_type'] ],
-			'title'                  => $title,
+			'clientId'              => $client_id,
+			'addressId'             => $address_id,
+			'reportTypeId'          => $service['report_type_id'],
+			'title'                 => $title,
 			// Référence libre pour retrouver facilement la réservation d'origine.
-			'secondReference'        => 'WEB-' . $booking['start']->format( 'Ymd-Hi' ) . '-' . strtoupper( substr( md5( $booking['email'] . $booking['start']->format( DateTimeInterface::ATOM ) ), 0, 4 ) ),
-			'isDescriptionInReport'  => true,
-			'description'            => $booking['message'],
-			'start'                  => $booking['start']->format( DateTimeInterface::ATOM ),
-			'end'                    => $booking['end']->format( DateTimeInterface::ATOM ),
-			// Le dépannage est traité en priorité "high", l'entretien en "normal".
-			'importanceLevel'        => 'depannage' === $booking['service_type'] ? 'high' : 'normal',
+			'secondReference'       => 'WEB-' . $booking['start']->format( 'Ymd-Hi' ) . '-' . strtoupper( substr( md5( $booking['email'] . $booking['start']->format( DateTimeInterface::ATOM ) ), 0, 4 ) ),
+			'isDescriptionInReport' => true,
+			'description'           => $booking['message'],
+			'start'                 => $booking['start']->format( DateTimeInterface::ATOM ),
+			'end'                   => $booking['end']->format( DateTimeInterface::ATOM ),
+			'importanceLevel'       => $service['importance_level'],
 		);
 
 		if ( ! empty( $this->resource_id ) ) {

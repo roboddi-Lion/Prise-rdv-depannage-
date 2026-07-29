@@ -9,7 +9,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Lion_RDV_Notifications {
 
 	public static function send_client_confirmation( array $booking ) {
-		$service_label = 'entretien' === $booking['service_type'] ? __( 'entretien', 'lion-rdv-booking' ) : __( 'dépannage', 'lion-rdv-booking' );
+		$services      = Lion_RDV_Settings::get_settings()['services'];
+		$service_label = $services[ $booking['service_type'] ]['label'] ?? $booking['service_type'];
 
 		$subject = sprintf(
 			/* translators: %s: service type */
@@ -41,7 +42,7 @@ class Lion_RDV_Notifications {
 			return;
 		}
 
-		$service_label = 'entretien' === $booking['service_type'] ? __( 'Entretien', 'lion-rdv-booking' ) : __( 'Dépannage', 'lion-rdv-booking' );
+		$service_label = $settings['services'][ $booking['service_type'] ]['label'] ?? $booking['service_type'];
 		$status_label  = $interfast_result['success']
 			? __( 'synchronisé avec InterFast', 'lion-rdv-booking' )
 			: __( 'ÉCHEC de synchronisation InterFast - à créer manuellement', 'lion-rdv-booking' );

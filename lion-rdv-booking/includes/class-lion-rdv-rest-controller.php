@@ -26,7 +26,7 @@ class Lion_RDV_Rest_Controller {
 					'service' => array(
 						'required' => true,
 						'type'     => 'string',
-						'enum'     => array( 'depannage', 'entretien' ),
+						'enum'     => array_keys( Lion_RDV_Settings::get_settings()['services'] ),
 					),
 				),
 			)
@@ -89,9 +89,10 @@ class Lion_RDV_Rest_Controller {
 			);
 		}
 
-		$errors = array();
+		$errors   = array();
+		$settings = Lion_RDV_Settings::get_settings();
 
-		$service_type = in_array( $body['service'] ?? '', array( 'depannage', 'entretien' ), true ) ? $body['service'] : null;
+		$service_type = array_key_exists( $body['service'] ?? '', $settings['services'] ) ? $body['service'] : null;
 		if ( ! $service_type ) {
 			$errors[] = __( 'Type d\'intervention invalide.', 'lion-rdv-booking' );
 		}
@@ -137,8 +138,7 @@ class Lion_RDV_Rest_Controller {
 		}
 
 		if ( $start && $end && $service_type ) {
-			$settings          = Lion_RDV_Settings::get_settings();
-			$expected_duration = 'entretien' === $service_type ? (int) $settings['duration_entretien'] : (int) $settings['duration_depannage'];
+			$expected_duration = (int) $settings['services'][ $service_type ]['duration_minutes'];
 			$actual_duration   = ( $end->getTimestamp() - $start->getTimestamp() ) / 60;
 
 			if ( (int) $actual_duration !== $expected_duration ) {

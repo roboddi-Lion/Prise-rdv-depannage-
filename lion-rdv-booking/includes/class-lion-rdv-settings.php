@@ -40,26 +40,76 @@ class Lion_RDV_Settings {
 		}
 
 		return array(
-			'interfast_api_key'                    => '',
-			'interfast_api_base_url'                => 'https://app.inter-fast.fr',
-			'interfast_resource_id'                 => '',
-			// Modèles de rapport InterFast (Chauffage/Chaudière) — Réglages > Prise de RDV Lion > Tester la connexion pour voir/changer la liste.
-			'interfast_report_type_id_depannage'    => '8ce790fa-a7d7-413a-a2c9-4d6cc822b93d', // "Dépannage"
-			'interfast_report_type_id_entretien'    => 'd6c59ab3-085b-4436-8f1e-602904a62fba', // "Entretien de chaudière à gaz"
-			'duration_depannage'     => 60,
-			'duration_entretien'     => 90,
-			'lead_time_depannage'    => 4,
-			'lead_time_entretien'    => 24,
+			'interfast_api_key'      => '',
+			'interfast_api_base_url' => 'https://app.inter-fast.fr',
+			'interfast_resource_id'  => '',
 			'horizon_days'           => 30,
 			'slot_step_minutes'      => 30,
 			'notification_email'     => get_option( 'admin_email' ),
 			'hours'                  => $default_hours,
+			'services'               => self::default_services(),
+		);
+	}
+
+	/**
+	 * Liste des types de rendez-vous proposés dans le widget. Chaque service a
+	 * sa propre durée, préavis, priorité InterFast et modèle de rapport
+	 * (reportTypeId — obligatoire pour créer une intervention, voir
+	 * developers.inter-fast.fr). Pour ajouter un nouveau service, ajoutez une
+	 * entrée ici avec une clé unique ; son ID de modèle de rapport pourra
+	 * ensuite être ajusté depuis les réglages (bouton "Tester la connexion").
+	 */
+	public static function default_services() {
+		return array(
+			'depannage'      => array(
+				'label'            => __( 'Dépannage', 'lion-rdv-booking' ),
+				'description'      => __( 'Panne, urgence, intervention rapide', 'lion-rdv-booking' ),
+				'duration_minutes' => 60,
+				'lead_time_hours'  => 4,
+				'importance_level' => 'high',
+				// "Dépannage"
+				'report_type_id'   => '8ce790fa-a7d7-413a-a2c9-4d6cc822b93d',
+			),
+			'entretien'      => array(
+				'label'            => __( 'Entretien chaudière', 'lion-rdv-booking' ),
+				'description'      => __( 'Entretien annuel de chaudière (gaz, fioul, bois)', 'lion-rdv-booking' ),
+				'duration_minutes' => 90,
+				'lead_time_hours'  => 24,
+				'importance_level' => 'normal',
+				// "Entretien de chaudière à gaz"
+				'report_type_id'   => 'd6c59ab3-085b-4436-8f1e-602904a62fba',
+			),
+			'entretien_clim' => array(
+				'label'            => __( 'Entretien climatisation / PAC', 'lion-rdv-booking' ),
+				'description'      => __( 'Entretien de climatisation ou de pompe à chaleur', 'lion-rdv-booking' ),
+				'duration_minutes' => 90,
+				'lead_time_hours'  => 24,
+				'importance_level' => 'normal',
+				// "Entretien - Maintenance de PAC et climatisation"
+				'report_type_id'   => 'a387bfb1-c156-4611-a0f0-d2364c72003e',
+			),
 		);
 	}
 
 	public static function get_settings() {
 		$settings = get_option( self::OPTION_KEY, array() );
-		return wp_parse_args( $settings, self::default_settings() );
+		$settings = wp_parse_args( $settings, self::default_settings() );
+
+		// Fusion clé par clé plutôt qu'un simple wp_parse_args (superficiel) :
+		// si un nouveau service est ajouté au code après que l'utilisateur ait
+		// déjà enregistré ses réglages, il apparaît quand même avec ses valeurs
+		// par défaut au lieu d'être silencieusement absent.
+		$saved_services   = is_array( $settings['services'] ?? null ) ? $settings['services'] : array();
+		$default_services = self::default_services();
+		$merged_services  = array();
+		foreach ( $default_services as $key => $default_service ) {
+			$merged_services[ $key ] = isset( $saved_services[ $key ] ) && is_array( $saved_services[ $key ] )
+				? wp_parse_args( $saved_services[ $key ], $default_service )
+				: $default_service;
+		}
+		$settings['services'] = $merged_services;
+
+		return $settings;
 	}
 
 	public function add_menu() {
@@ -97,21 +147,29 @@ class Lion_RDV_Settings {
 		$defaults = self::default_settings();
 		$clean    = array();
 
-		$clean['interfast_api_key']                 = isset( $input['interfast_api_key'] ) ? sanitize_text_field( $input['interfast_api_key'] ) : '';
-		$clean['interfast_api_base_url']            = isset( $input['interfast_api_base_url'] ) ? esc_url_raw( trim( $input['interfast_api_base_url'] ) ) : $defaults['interfast_api_base_url'];
-		$clean['interfast_resource_id']             = isset( $input['interfast_resource_id'] ) ? sanitize_text_field( $input['interfast_resource_id'] ) : '';
-		$clean['interfast_report_type_id_depannage'] = isset( $input['interfast_report_type_id_depannage'] ) ? sanitize_text_field( $input['interfast_report_type_id_depannage'] ) : $defaults['interfast_report_type_id_depannage'];
-		$clean['interfast_report_type_id_entretien'] = isset( $input['interfast_report_type_id_entretien'] ) ? sanitize_text_field( $input['interfast_report_type_id_entretien'] ) : $defaults['interfast_report_type_id_entretien'];
+		$clean['interfast_api_key']      = isset( $input['interfast_api_key'] ) ? sanitize_text_field( $input['interfast_api_key'] ) : '';
+		$clean['interfast_api_base_url'] = isset( $input['interfast_api_base_url'] ) ? esc_url_raw( trim( $input['interfast_api_base_url'] ) ) : $defaults['interfast_api_base_url'];
+		$clean['interfast_resource_id']  = isset( $input['interfast_resource_id'] ) ? sanitize_text_field( $input['interfast_resource_id'] ) : '';
 
-		$clean['duration_depannage']  = max( 15, (int) ( $input['duration_depannage'] ?? $defaults['duration_depannage'] ) );
-		$clean['duration_entretien']  = max( 15, (int) ( $input['duration_entretien'] ?? $defaults['duration_entretien'] ) );
-		$clean['lead_time_depannage'] = max( 0, (int) ( $input['lead_time_depannage'] ?? $defaults['lead_time_depannage'] ) );
-		$clean['lead_time_entretien'] = max( 0, (int) ( $input['lead_time_entretien'] ?? $defaults['lead_time_entretien'] ) );
-		$clean['horizon_days']        = max( 1, min( 180, (int) ( $input['horizon_days'] ?? $defaults['horizon_days'] ) ) );
-		$clean['slot_step_minutes']   = max( 5, (int) ( $input['slot_step_minutes'] ?? $defaults['slot_step_minutes'] ) );
+		$clean['horizon_days']       = max( 1, min( 180, (int) ( $input['horizon_days'] ?? $defaults['horizon_days'] ) ) );
+		$clean['slot_step_minutes']  = max( 5, (int) ( $input['slot_step_minutes'] ?? $defaults['slot_step_minutes'] ) );
 
-		$email                        = isset( $input['notification_email'] ) ? sanitize_email( $input['notification_email'] ) : '';
-		$clean['notification_email']  = $email ? $email : $defaults['notification_email'];
+		$email                       = isset( $input['notification_email'] ) ? sanitize_email( $input['notification_email'] ) : '';
+		$clean['notification_email'] = $email ? $email : $defaults['notification_email'];
+
+		$clean['services'] = array();
+		foreach ( $defaults['services'] as $key => $default_service ) {
+			$service_input = $input['services'][ $key ] ?? array();
+
+			$clean['services'][ $key ] = array(
+				'label'            => isset( $service_input['label'] ) && '' !== trim( $service_input['label'] ) ? sanitize_text_field( $service_input['label'] ) : $default_service['label'],
+				'description'      => isset( $service_input['description'] ) ? sanitize_text_field( $service_input['description'] ) : $default_service['description'],
+				'duration_minutes' => max( 15, (int) ( $service_input['duration_minutes'] ?? $default_service['duration_minutes'] ) ),
+				'lead_time_hours'  => max( 0, (int) ( $service_input['lead_time_hours'] ?? $default_service['lead_time_hours'] ) ),
+				'importance_level' => in_array( $service_input['importance_level'] ?? '', array( 'normal', 'high' ), true ) ? $service_input['importance_level'] : $default_service['importance_level'],
+				'report_type_id'   => isset( $service_input['report_type_id'] ) ? sanitize_text_field( $service_input['report_type_id'] ) : $default_service['report_type_id'],
+			);
+		}
 
 		$clean['hours'] = array();
 		foreach ( array_keys( self::$days ) as $day ) {
