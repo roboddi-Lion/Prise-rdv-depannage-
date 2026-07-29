@@ -156,20 +156,11 @@ class Lion_RDV_Rest_Controller {
 			);
 		}
 
-		$availability = new Lion_RDV_Availability();
-		$still_free   = $availability->is_slot_still_free( $start, $end );
-
-		if ( null !== $still_free['error'] ) {
-			return new WP_REST_Response(
-				array(
-					'success' => false,
-					'message' => __( 'Impossible de vérifier la disponibilité pour le moment. Merci de réessayer.', 'lion-rdv-booking' ),
-				),
-				503
-			);
-		}
-
-		if ( ! $still_free['free'] ) {
+		// Verrou côté WordPress : ferme la fenêtre de course la plus probable
+		// (deux visiteurs qui cliquent sur le même créneau au même moment sur
+		// le widget). Best-effort, pas un verrou distribué garanti, mais
+		// couvre le cas réel puisque toutes les réservations passent par ici.
+		if ( ! $this->acquire_slot_lock( $service_type, $start, $end ) ) {
 			return new WP_REST_Response(
 				array(
 					'success'    => false,
@@ -180,60 +171,111 @@ class Lion_RDV_Rest_Controller {
 			);
 		}
 
-		$booking = array_merge(
-			$clean,
-			array(
-				'service_type' => $service_type,
-				'start'        => $start,
-				'end'          => $end,
-			)
-		);
+		try {
+			$availability = new Lion_RDV_Availability();
+			$still_free   = $availability->is_slot_still_free( $start, $end );
 
-		$client            = new Lion_RDV_Interfast_Client();
-		$interfast_result  = $client->create_event( $booking );
+			if ( null !== $still_free['error'] ) {
+				return new WP_REST_Response(
+					array(
+						'success' => false,
+						'message' => __( 'Impossible de vérifier la disponibilité pour le moment. Merci de réessayer.', 'lion-rdv-booking' ),
+					),
+					503
+				);
+			}
 
-		$booking_id = Lion_RDV_DB::insert_booking(
-			array(
-				'created_at'         => current_time( 'mysql' ),
-				'service_type'       => $service_type,
-				'slot_start'         => $start->format( 'Y-m-d H:i:s' ),
-				'slot_end'           => $end->format( 'Y-m-d H:i:s' ),
-				'first_name'         => $clean['first_name'],
-				'last_name'          => $clean['last_name'],
-				'phone'              => $clean['phone'],
-				'email'              => $clean['email'],
-				'address'            => $clean['address'],
-				'postal_code'        => $clean['postal_code'],
-				'city'               => $clean['city'],
-				'message'            => $clean['message'],
-				'status'             => $interfast_result['success'] ? 'confirmed' : 'failed',
-				'interfast_event_id' => $interfast_result['event_id'],
-				'interfast_error'    => $interfast_result['error'],
-				'ip_address'         => $this->get_client_ip(),
-			)
-		);
+			if ( ! $still_free['free'] ) {
+				return new WP_REST_Response(
+					array(
+						'success'    => false,
+						'slot_taken' => true,
+						'message'    => __( 'Ce créneau vient d\'être réservé par quelqu\'un d\'autre. Merci d\'en choisir un autre.', 'lion-rdv-booking' ),
+					),
+					409
+				);
+			}
 
-		Lion_RDV_Notifications::send_internal_notification( $booking, $interfast_result );
+			$booking = array_merge(
+				$clean,
+				array(
+					'service_type' => $service_type,
+					'start'        => $start,
+					'end'          => $end,
+				)
+			);
 
-		if ( ! $interfast_result['success'] ) {
+			$client           = new Lion_RDV_Interfast_Client();
+			$interfast_result = $client->create_event( $booking );
+
+			Lion_RDV_DB::insert_booking(
+				array(
+					'created_at'         => current_time( 'mysql' ),
+					'service_type'       => $service_type,
+					'slot_start'         => $start->format( 'Y-m-d H:i:s' ),
+					'slot_end'           => $end->format( 'Y-m-d H:i:s' ),
+					'first_name'         => $clean['first_name'],
+					'last_name'          => $clean['last_name'],
+					'phone'              => $clean['phone'],
+					'email'              => $clean['email'],
+					'address'            => $clean['address'],
+					'postal_code'        => $clean['postal_code'],
+					'city'               => $clean['city'],
+					'message'            => $clean['message'],
+					'status'             => $interfast_result['success'] ? 'confirmed' : 'failed',
+					'interfast_event_id' => $interfast_result['event_id'],
+					'interfast_error'    => $interfast_result['error'],
+					'ip_address'         => $this->get_client_ip(),
+				)
+			);
+
+			Lion_RDV_Notifications::send_internal_notification( $booking, $interfast_result );
+
+			if ( ! $interfast_result['success'] ) {
+				return new WP_REST_Response(
+					array(
+						'success' => false,
+						'message' => __( 'Votre demande n\'a pas pu être enregistrée automatiquement. Notre équipe a été prévenue et vous recontactera pour confirmer votre rendez-vous.', 'lion-rdv-booking' ),
+					),
+					502
+				);
+			}
+
+			Lion_RDV_Notifications::send_client_confirmation( $booking );
+
 			return new WP_REST_Response(
 				array(
-					'success' => false,
-					'message' => __( 'Votre demande n\'a pas pu être enregistrée automatiquement. Notre équipe a été prévenue et vous recontactera pour confirmer votre rendez-vous.', 'lion-rdv-booking' ),
+					'success' => true,
+					'message' => __( 'Votre rendez-vous est confirmé ! Un email récapitulatif vous a été envoyé.', 'lion-rdv-booking' ),
 				),
-				502
+				200
 			);
+		} finally {
+			$this->release_slot_lock( $service_type, $start, $end );
+		}
+	}
+
+	private function acquire_slot_lock( $service_type, DateTimeImmutable $start, DateTimeImmutable $end ) {
+		$key = $this->slot_lock_key( $service_type, $start, $end );
+
+		if ( false !== get_transient( $key ) ) {
+			return false;
 		}
 
-		Lion_RDV_Notifications::send_client_confirmation( $booking );
+		// 30s couvre largement le temps d'un aller-retour InterFast (création
+		// du client + de l'intervention) ; libéré explicitement dans le
+		// `finally` de handle_book_slot() dès que la requête se termine.
+		set_transient( $key, 1, 30 );
 
-		return new WP_REST_Response(
-			array(
-				'success' => true,
-				'message' => __( 'Votre rendez-vous est confirmé ! Un email récapitulatif vous a été envoyé.', 'lion-rdv-booking' ),
-			),
-			200
-		);
+		return true;
+	}
+
+	private function release_slot_lock( $service_type, DateTimeImmutable $start, DateTimeImmutable $end ) {
+		delete_transient( $this->slot_lock_key( $service_type, $start, $end ) );
+	}
+
+	private function slot_lock_key( $service_type, DateTimeImmutable $start, DateTimeImmutable $end ) {
+		return 'lion_rdv_lock_' . md5( $service_type . '|' . $start->format( DateTimeInterface::ATOM ) . '|' . $end->format( DateTimeInterface::ATOM ) );
 	}
 
 	private function check_rate_limit() {
