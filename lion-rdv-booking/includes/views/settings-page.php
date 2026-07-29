@@ -90,10 +90,14 @@ $day_labels = array(
 				</td>
 			</tr>
 			<tr>
-				<th scope="row"><label for="interfast_resource_id"><?php esc_html_e( 'ID technicien InterFast (optionnel)', 'lion-rdv-booking' ); ?></label></th>
+				<th scope="row"><label for="interfast_technician_ids"><?php esc_html_e( 'ID techniciens éligibles aux RDV en ligne', 'lion-rdv-booking' ); ?></label></th>
 				<td>
-					<input type="text" id="interfast_resource_id" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[interfast_resource_id]" value="<?php echo esc_attr( $settings['interfast_resource_id'] ); ?>" class="regular-text" />
-					<p class="description"><?php esc_html_e( 'Identifiant numérique d\'un utilisateur InterFast (technicien). Laissez vide pour vérifier la disponibilité sur l\'ensemble du planning ; renseigné, les créneaux seront limités à ce technicien et les nouvelles interventions lui seront assignées.', 'lion-rdv-booking' ); ?></p>
+					<input type="text" id="interfast_technician_ids" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[interfast_technician_ids]" value="<?php echo esc_attr( implode( ', ', $settings['interfast_technician_ids'] ) ); ?>" class="regular-text" placeholder="12, 34, 56" />
+					<p class="description">
+						<?php esc_html_e( 'Identifiants numériques des utilisateurs InterFast (techniciens) pouvant recevoir une intervention réservée en ligne, séparés par des virgules.', 'lion-rdv-booking' ); ?>
+						<strong><?php esc_html_e( 'Fortement recommandé dès que vous avez plusieurs techniciens', 'lion-rdv-booking' ); ?></strong> :
+						<?php esc_html_e( 'un créneau est proposé si AU MOINS UN de ces techniciens est libre, et celui qui est libre lui est automatiquement assigné. Laissé vide, le plugin vérifie le planning de toute l\'entreprise et considère un créneau occupé dès qu\'un seul technicien (parmi tous, même ceux non concernés par les RDV en ligne) a quelque chose de prévu — ce qui peut faire disparaître presque tous les créneaux si votre planning est chargé.', 'lion-rdv-booking' ); ?>
+					</p>
 				</td>
 			</tr>
 		</table>

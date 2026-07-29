@@ -54,9 +54,10 @@ class Lion_RDV_Availability {
 			);
 		}
 
-		$busy_periods = $events_result['events'];
-		$days         = array();
-		$day_keys     = array_flip( Lion_RDV_Settings::$days );
+		$busy_periods   = $events_result['events'];
+		$technician_ids = $settings['interfast_technician_ids'];
+		$days           = array();
+		$day_keys       = array_flip( Lion_RDV_Settings::$days );
 
 		$cursor = $range_start;
 		while ( $cursor < $range_end ) {
@@ -93,7 +94,7 @@ class Lion_RDV_Availability {
 							break;
 						}
 
-						if ( $slot_start >= $earliest && ! $this->overlaps_any( $slot_start, $slot_end, $busy_periods ) ) {
+						if ( $slot_start >= $earliest && $this->slot_is_available( $slot_start, $slot_end, $busy_periods, $technician_ids )['available'] ) {
 							$day_slots[] = array(
 								'start' => $slot_start->format( DateTimeInterface::ATOM ),
 								'end'   => $slot_end->format( DateTimeInterface::ATOM ),
@@ -126,31 +127,81 @@ class Lion_RDV_Availability {
 
 	/**
 	 * Revérifie qu'un créneau précis est toujours libre juste avant la création
-	 * de l'événement InterFast (limite le risque de double réservation).
+	 * de l'événement InterFast (limite le risque de double réservation), et
+	 * détermine quel technicien libre lui assigner (mode multi-techniciens).
+	 *
+	 * @return array{free:bool,error:?string,technician_id:?int}
 	 */
 	public function is_slot_still_free( DateTimeImmutable $start, DateTimeImmutable $end ) {
 		$result = $this->client->get_events( $start->modify( '-1 minute' ), $end->modify( '+1 minute' ) );
 
 		if ( ! $result['success'] ) {
 			return array(
-				'free'  => false,
-				'error' => $result['error'],
+				'free'          => false,
+				'error'         => $result['error'],
+				'technician_id' => null,
 			);
 		}
 
+		$availability = $this->slot_is_available( $start, $end, $result['events'], $this->client->get_technician_ids() );
+
 		return array(
-			'free'  => ! $this->overlaps_any( $start, $end, $result['events'] ),
-			'error' => null,
+			'free'          => $availability['available'],
+			'error'         => null,
+			'technician_id' => $availability['technician_id'],
 		);
 	}
 
-	private function overlaps_any( DateTimeImmutable $start, DateTimeImmutable $end, array $busy_periods ) {
-		foreach ( $busy_periods as $busy ) {
-			if ( $busy['start'] < $end && $busy['end'] > $start ) {
-				return true;
+	/**
+	 * Détermine si un créneau est disponible.
+	 *
+	 * - Si $technician_ids est vide (aucun technicien configuré pour les RDV
+	 *   en ligne) : mode "planning global", le créneau est libre si AUCUN
+	 *   événement ne le chevauche, quel qu'en soit le technicien.
+	 * - Sinon : le créneau est libre si AU MOINS UN des techniciens listés
+	 *   n'a aucun événement qui lui est assigné sur ce créneau ; ce
+	 *   technicien est retourné pour lui assigner l'intervention.
+	 *
+	 * @return array{available:bool,technician_id:?int}
+	 */
+	private function slot_is_available( DateTimeImmutable $start, DateTimeImmutable $end, array $busy_periods, array $technician_ids ) {
+		if ( empty( $technician_ids ) ) {
+			foreach ( $busy_periods as $busy ) {
+				if ( $busy['start'] < $end && $busy['end'] > $start ) {
+					return array(
+						'available'     => false,
+						'technician_id' => null,
+					);
+				}
+			}
+			return array(
+				'available'     => true,
+				'technician_id' => null,
+			);
+		}
+
+		foreach ( $technician_ids as $technician_id ) {
+			$blocked = false;
+
+			foreach ( $busy_periods as $busy ) {
+				if ( $busy['start'] < $end && $busy['end'] > $start && in_array( (int) $technician_id, $busy['technician_ids'] ?? array(), true ) ) {
+					$blocked = true;
+					break;
+				}
+			}
+
+			if ( ! $blocked ) {
+				return array(
+					'available'     => true,
+					'technician_id' => (int) $technician_id,
+				);
 			}
 		}
-		return false;
+
+		return array(
+			'available'     => false,
+			'technician_id' => null,
+		);
 	}
 
 	private function combine_date_time( DateTimeImmutable $day, $time_string, DateTimeZone $tz ) {

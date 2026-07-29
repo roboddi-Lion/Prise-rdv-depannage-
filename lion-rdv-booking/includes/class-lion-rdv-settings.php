@@ -40,10 +40,15 @@ class Lion_RDV_Settings {
 		}
 
 		return array(
-			'interfast_api_key'      => '',
-			'interfast_api_base_url' => 'https://app.inter-fast.fr',
-			'interfast_resource_id'  => '',
-			'horizon_days'           => 30,
+			'interfast_api_key'        => '',
+			'interfast_api_base_url'   => 'https://app.inter-fast.fr',
+			// Liste d'ID numériques d'utilisateurs InterFast (techniciens)
+			// éligibles aux RDV pris en ligne. Vide = comportement "planning
+			// global" (voir Lion_RDV_Availability) : à éviter dès que plusieurs
+			// techniciens existent, sous peine de considérer un créneau occupé
+			// dès qu'UN SEUL technicien de l'entreprise a quelque chose de prévu.
+			'interfast_technician_ids' => array(),
+			'horizon_days'             => 30,
 			'slot_step_minutes'      => 30,
 			'notification_email'     => get_option( 'admin_email' ),
 			'hours'                  => $default_hours,
@@ -149,7 +154,20 @@ class Lion_RDV_Settings {
 
 		$clean['interfast_api_key']      = isset( $input['interfast_api_key'] ) ? sanitize_text_field( $input['interfast_api_key'] ) : '';
 		$clean['interfast_api_base_url'] = isset( $input['interfast_api_base_url'] ) ? esc_url_raw( trim( $input['interfast_api_base_url'] ) ) : $defaults['interfast_api_base_url'];
-		$clean['interfast_resource_id']  = isset( $input['interfast_resource_id'] ) ? sanitize_text_field( $input['interfast_resource_id'] ) : '';
+
+		$technician_ids_raw               = isset( $input['interfast_technician_ids'] ) ? (string) $input['interfast_technician_ids'] : '';
+		$clean['interfast_technician_ids'] = array_values(
+			array_unique(
+				array_filter(
+					array_map(
+						static function ( $id ) {
+							return (int) trim( $id );
+						},
+						explode( ',', $technician_ids_raw )
+					)
+				)
+			)
+		);
 
 		$clean['horizon_days']       = max( 1, min( 180, (int) ( $input['horizon_days'] ?? $defaults['horizon_days'] ) ) );
 		$clean['slot_step_minutes']  = max( 5, (int) ( $input['slot_step_minutes'] ?? $defaults['slot_step_minutes'] ) );

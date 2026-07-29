@@ -199,9 +199,10 @@ class Lion_RDV_Rest_Controller {
 			$booking = array_merge(
 				$clean,
 				array(
-					'service_type' => $service_type,
-					'start'        => $start,
-					'end'          => $end,
+					'service_type'            => $service_type,
+					'start'                   => $start,
+					'end'                     => $end,
+					'assigned_technician_id'  => $still_free['technician_id'],
 				)
 			);
 

@@ -18,16 +18,20 @@ class Lion_RDV_Interfast_Client {
 
 	private $api_key;
 	private $base_url;
-	private $resource_id;
+	private $technician_ids;
 	private $services;
 
-	public function __construct( $api_key = null, $base_url = null, $resource_id = null ) {
+	public function __construct( $api_key = null, $base_url = null, $technician_ids = null ) {
 		$settings = Lion_RDV_Settings::get_settings();
 
-		$this->api_key     = null !== $api_key ? $api_key : $settings['interfast_api_key'];
-		$this->base_url    = rtrim( null !== $base_url ? $base_url : $settings['interfast_api_base_url'], '/' );
-		$this->resource_id = null !== $resource_id ? $resource_id : $settings['interfast_resource_id'];
-		$this->services    = $settings['services'];
+		$this->api_key        = null !== $api_key ? $api_key : $settings['interfast_api_key'];
+		$this->base_url       = rtrim( null !== $base_url ? $base_url : $settings['interfast_api_base_url'], '/' );
+		$this->technician_ids = null !== $technician_ids ? $technician_ids : $settings['interfast_technician_ids'];
+		$this->services       = $settings['services'];
+	}
+
+	public function get_technician_ids() {
+		return $this->technician_ids;
 	}
 
 	public function is_configured() {
@@ -48,7 +52,10 @@ class Lion_RDV_Interfast_Client {
 	 *
 	 * Paramètres confirmés via GET /v1/events dans developers.inter-fast.fr.
 	 *
-	 * @return array{success:bool,events:array,error:?string} events = liste de ['start' => DateTimeImmutable, 'end' => DateTimeImmutable]
+	 * @return array{success:bool,events:array,error:?string} events = liste de
+	 *         ['start' => DateTimeImmutable, 'end' => DateTimeImmutable, 'technician_ids' => int[]]
+	 *         technician_ids = techniciens concernés par l'événement (primaryTechnicianId + users[].id),
+	 *         tableau vide si l'événement n'a aucun technicien assigné.
 	 */
 	public function get_events( DateTimeImmutable $start, DateTimeImmutable $end ) {
 		$query = array(
@@ -63,8 +70,8 @@ class Lion_RDV_Interfast_Client {
 			'meeting'  => 'false',
 		);
 
-		if ( ! empty( $this->resource_id ) ) {
-			$query['technicians'] = array( $this->resource_id );
+		if ( ! empty( $this->technician_ids ) ) {
+			$query['technicians'] = array_values( $this->technician_ids );
 		}
 
 		$response = $this->request( 'GET', '/v1/events', $query );
@@ -82,10 +89,23 @@ class Lion_RDV_Interfast_Client {
 				continue;
 			}
 
+			$technician_ids = array();
+			if ( ! empty( $item['primaryTechnicianId'] ) ) {
+				$technician_ids[] = (int) $item['primaryTechnicianId'];
+			}
+			if ( ! empty( $item['users'] ) && is_array( $item['users'] ) ) {
+				foreach ( $item['users'] as $user ) {
+					if ( isset( $user['id'] ) ) {
+						$technician_ids[] = (int) $user['id'];
+					}
+				}
+			}
+
 			try {
 				$events[] = array(
-					'start' => new DateTimeImmutable( $item['start'] ),
-					'end'   => new DateTimeImmutable( $item['end'] ),
+					'start'          => new DateTimeImmutable( $item['start'] ),
+					'end'            => new DateTimeImmutable( $item['end'] ),
+					'technician_ids' => array_values( array_unique( $technician_ids ) ),
 				);
 			} catch ( Exception $e ) {
 				continue;
@@ -392,8 +412,10 @@ class Lion_RDV_Interfast_Client {
 			'importanceLevel'       => $service['importance_level'],
 		);
 
-		if ( ! empty( $this->resource_id ) ) {
-			$payload['primaryTechnicianId'] = (int) $this->resource_id;
+		// Technicien effectivement libre pour ce créneau précis, déterminé par
+		// Lion_RDV_Availability::is_slot_still_free() (mode multi-techniciens).
+		if ( ! empty( $booking['assigned_technician_id'] ) ) {
+			$payload['primaryTechnicianId'] = (int) $booking['assigned_technician_id'];
 		}
 
 		return apply_filters( 'lion_rdv_interfast_event_payload', $payload, $booking );

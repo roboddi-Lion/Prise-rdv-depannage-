@@ -70,10 +70,19 @@ est réutilisé ; sinon un nouveau client "particulier" est créé. Si la
 recherche échoue (API indisponible), le plugin se rabat sur la création
 d'un nouveau client plutôt que de bloquer la réservation.
 
-Pour filtrer les disponibilités sur un technicien précis (et lui assigner
-automatiquement les nouvelles interventions), renseignez son identifiant
-numérique InterFast dans le champ **« ID technicien InterFast »** des
-réglages.
+### Plusieurs techniciens : champ « ID techniciens éligibles aux RDV en ligne »
+
+**Important si votre équipe compte plusieurs techniciens dans InterFast.**
+Par défaut (champ vide), le plugin vérifie le planning de **toute
+l'entreprise** et considère un créneau occupé dès qu'**un seul** technicien
+(même un qui ne prend jamais de RDV en ligne) a quelque chose de prévu — sur
+un planning chargé, ça peut faire disparaître presque tous les créneaux.
+
+Renseignez la liste des identifiants numériques InterFast des techniciens
+pouvant recevoir un RDV pris en ligne (ex. `12, 34, 56`). Le plugin
+considère alors un créneau libre dès qu'**au moins un** de ces techniciens
+n'a rien de prévu, et lui assigne automatiquement l'intervention
+(`primaryTechnicianId`) au moment de la réservation.
 
 ## Fonctionnement
 
