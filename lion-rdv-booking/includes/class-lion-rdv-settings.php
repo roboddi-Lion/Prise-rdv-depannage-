@@ -41,7 +41,7 @@ class Lion_RDV_Settings {
 
 		return array(
 			'interfast_api_key'      => '',
-			'interfast_api_base_url' => 'https://api.inter-fast.fr/v1',
+			'interfast_api_base_url' => 'https://app.inter-fast.fr/api/v1',
 			'interfast_resource_id'  => '',
 			'duration_depannage'     => 60,
 			'duration_entretien'     => 90,
