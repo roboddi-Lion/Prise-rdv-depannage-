@@ -40,9 +40,10 @@ class Lion_RDV_Settings {
 		}
 
 		return array(
-			'interfast_api_key'      => '',
-			'interfast_api_base_url' => 'https://app.inter-fast.fr',
-			'interfast_resource_id'  => '',
+			'interfast_api_key'        => '',
+			'interfast_api_base_url'   => 'https://app.inter-fast.fr',
+			'interfast_resource_id'    => '',
+			'interfast_report_type_id' => '',
 			'duration_depannage'     => 60,
 			'duration_entretien'     => 90,
 			'lead_time_depannage'    => 4,
@@ -94,9 +95,10 @@ class Lion_RDV_Settings {
 		$defaults = self::default_settings();
 		$clean    = array();
 
-		$clean['interfast_api_key']      = isset( $input['interfast_api_key'] ) ? sanitize_text_field( $input['interfast_api_key'] ) : '';
-		$clean['interfast_api_base_url'] = isset( $input['interfast_api_base_url'] ) ? esc_url_raw( trim( $input['interfast_api_base_url'] ) ) : $defaults['interfast_api_base_url'];
-		$clean['interfast_resource_id']  = isset( $input['interfast_resource_id'] ) ? sanitize_text_field( $input['interfast_resource_id'] ) : '';
+		$clean['interfast_api_key']        = isset( $input['interfast_api_key'] ) ? sanitize_text_field( $input['interfast_api_key'] ) : '';
+		$clean['interfast_api_base_url']   = isset( $input['interfast_api_base_url'] ) ? esc_url_raw( trim( $input['interfast_api_base_url'] ) ) : $defaults['interfast_api_base_url'];
+		$clean['interfast_resource_id']    = isset( $input['interfast_resource_id'] ) ? sanitize_text_field( $input['interfast_resource_id'] ) : '';
+		$clean['interfast_report_type_id'] = isset( $input['interfast_report_type_id'] ) ? sanitize_text_field( $input['interfast_report_type_id'] ) : '';
 
 		$clean['duration_depannage']  = max( 15, (int) ( $input['duration_depannage'] ?? $defaults['duration_depannage'] ) );
 		$clean['duration_entretien']  = max( 15, (int) ( $input['duration_entretien'] ?? $defaults['duration_entretien'] ) );

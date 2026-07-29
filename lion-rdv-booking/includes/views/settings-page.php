@@ -47,6 +47,16 @@ $day_labels = array(
 				);
 				?>
 				</p>
+				<?php if ( ! empty( $test_result['report_types'] ) ) : ?>
+					<p><strong><?php esc_html_e( 'Modèles de rapport disponibles (à copier dans le champ « ID de modèle de rapport » ci-dessous) :', 'lion-rdv-booking' ); ?></strong></p>
+					<ul style="list-style:disc;margin-left:20px;">
+						<?php foreach ( $test_result['report_types'] as $type ) : ?>
+							<li><code><?php echo esc_html( $type['id'] ); ?></code> — <?php echo esc_html( $type['name'] ); ?></li>
+						<?php endforeach; ?>
+					</ul>
+				<?php else : ?>
+					<p><?php esc_html_e( 'Aucun modèle de rapport récupéré automatiquement : renseignez l\'ID de modèle de rapport manuellement (Modèles de rapports dans InterFast).', 'lion-rdv-booking' ); ?></p>
+				<?php endif; ?>
 			<?php else : ?>
 				<p><strong><?php esc_html_e( 'Échec de la connexion InterFast :', 'lion-rdv-booking' ); ?></strong> <?php echo esc_html( $test_result['error'] ); ?></p>
 				<p><?php esc_html_e( 'Vérifiez la clé API, l\'URL de base, et au besoin les noms d\'endpoints dans includes/class-lion-rdv-interfast-client.php (voir le README).', 'lion-rdv-booking' ); ?></p>
@@ -78,6 +88,13 @@ $day_labels = array(
 				<td>
 					<input type="text" id="interfast_resource_id" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[interfast_resource_id]" value="<?php echo esc_attr( $settings['interfast_resource_id'] ); ?>" class="regular-text" />
 					<p class="description"><?php esc_html_e( 'Identifiant numérique d\'un utilisateur InterFast (technicien). Laissez vide pour vérifier la disponibilité sur l\'ensemble du planning ; renseigné, les créneaux seront limités à ce technicien et les nouvelles interventions lui seront assignées.', 'lion-rdv-booking' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="interfast_report_type_id"><?php esc_html_e( 'ID de modèle de rapport InterFast', 'lion-rdv-booking' ); ?></label></th>
+				<td>
+					<input type="text" id="interfast_report_type_id" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[interfast_report_type_id]" value="<?php echo esc_attr( $settings['interfast_report_type_id'] ); ?>" class="regular-text" required />
+					<p class="description"><?php esc_html_e( 'Obligatoire pour créer une intervention (reportTypeId). Enregistrez vos réglages puis cliquez sur « Tester la connexion » ci-dessous : la liste de vos modèles de rapport InterFast s\'affichera pour copier le bon ID.', 'lion-rdv-booking' ); ?></p>
 				</td>
 			</tr>
 		</table>

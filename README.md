@@ -12,12 +12,16 @@ de l'agenda **InterFast**.
    Entretien »**.
 3. Allez dans **Réglages > Prise de RDV Lion** et renseignez :
    - votre **clé API InterFast** (générée dans InterFast : *Profil > Sécurité*)
-   - l'**URL de base de l'API** InterFast
+   - l'**URL de base de l'API** InterFast (`https://app.inter-fast.fr`)
    - les **horaires d'ouverture** par jour (matin / après-midi)
    - les **durées** et **délais de préavis** pour le dépannage et l'entretien
    - l'**email de notification interne** (par défaut : l'email admin du site)
-4. Cliquez sur **« Tester la connexion InterFast »** pour vérifier que tout
-   fonctionne.
+   - laissez pour l'instant le champ **« ID de modèle de rapport »** vide
+4. Cliquez sur **« Tester la connexion InterFast »**. Si la connexion
+   fonctionne, la liste de vos modèles de rapport InterFast s'affiche :
+   copiez l'ID voulu dans le champ **« ID de modèle de rapport »**,
+   enregistrez à nouveau. Ce champ est **obligatoire** pour créer une
+   intervention (`reportTypeId`).
 5. Ajoutez le shortcode `[lion_rdv_booking]` sur la page « Prise de rendez-vous »
    de votre site.
 
@@ -30,23 +34,28 @@ Confirmé via `https://developers.inter-fast.fr/` (référence OpenAPI) :
 - Authentification par en-tête `X-API-KEY`
 - `GET /v1/events` : vue unifiée du planning (interventions, RDV, absences,
   tâches), sert à calculer les créneaux libres
-- `POST /v1/client/particular` : création du client CRM associé à la
-  réservation (InterFast référence les interventions à un client existant,
-  pas à des coordonnées en texte libre)
-- `POST /v1/intervention` : création de l'intervention (`clientId` +
-  `addressId` obtenus à l'étape précédente)
+- `GET /v1/crm/search` : recherche d'un client existant par email avant
+  d'en créer un nouveau (évite les doublons dans le CRM)
+- `POST /v1/client/particular` : création du client CRM si aucun client
+  existant ne correspond (InterFast référence les interventions à un
+  client existant, pas à des coordonnées en texte libre)
+- `POST /v1/intervention` : création de l'intervention (`clientId`,
+  `addressId`, `reportTypeId` obtenus/configurés en amont)
 
 **Important** : l'accès à l'API InterFast est réservé aux comptes avec
 l'abonnement **Business**.
 
-**Limite connue à améliorer** : chaque réservation en ligne crée un nouveau
-client dans le CRM InterFast, même si le client existe déjà (pas de
-recherche/déduplication préalable — l'endpoint `GET /v1/client/search`
-existe mais son schéma exact n'a pas été vérifié). Si les doublons
-deviennent gênants, complétez `create_particular_client()` dans
-`lion-rdv-booking/includes/class-lion-rdv-interfast-client.php` pour
-rechercher un client existant (par email/téléphone) avant d'en créer un
-nouveau.
+**Anti-double-réservation** : en plus de revérifier la disponibilité auprès
+d'InterFast juste avant de créer l'intervention, un verrou côté WordPress
+(30 secondes) empêche deux visiteurs de valider le même créneau en même
+temps sur le widget.
+
+**Déduplication client** : avant de créer un client, le plugin cherche un
+client existant dont l'email correspond exactement (`GET /v1/crm/search`
+puis vérification stricte du champ `email` retourné). Si trouvé, ce client
+est réutilisé ; sinon un nouveau client "particulier" est créé. Si la
+recherche échoue (API indisponible), le plugin se rabat sur la création
+d'un nouveau client plutôt que de bloquer la réservation.
 
 Pour filtrer les disponibilités sur un technicien précis (et lui assigner
 automatiquement les nouvelles interventions), renseignez son identifiant

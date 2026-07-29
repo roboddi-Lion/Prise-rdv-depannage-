@@ -10,25 +10,24 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - Serveur : https://app.inter-fast.fr (les chemins incluent déjà /v1)
  * - Auth par en-tête X-API-KEY
  * - GET  /v1/events            → vue unifiée du planning (sert à calculer les créneaux libres)
- * - POST /v1/client/particular → création du client CRM associé à la réservation
- * - POST /v1/intervention      → création de l'intervention (référence clientId/addressId)
- *
- * ⚠️ Limite connue : chaque réservation crée un nouveau client CRM, sans
- * recherche préalable d'un client existant (dédoublonnage non implémenté —
- * voir le commentaire sur `create_particular_client()`).
+ * - GET  /v1/crm/search        → recherche d'un client existant (par email) avant d'en créer un
+ * - POST /v1/client/particular → création du client CRM si aucun existant ne correspond
+ * - POST /v1/intervention      → création de l'intervention (référence clientId/addressId/reportTypeId)
  */
 class Lion_RDV_Interfast_Client {
 
 	private $api_key;
 	private $base_url;
 	private $resource_id;
+	private $report_type_id;
 
 	public function __construct( $api_key = null, $base_url = null, $resource_id = null ) {
 		$settings = Lion_RDV_Settings::get_settings();
 
-		$this->api_key     = null !== $api_key ? $api_key : $settings['interfast_api_key'];
-		$this->base_url    = rtrim( null !== $base_url ? $base_url : $settings['interfast_api_base_url'], '/' );
-		$this->resource_id = null !== $resource_id ? $resource_id : $settings['interfast_resource_id'];
+		$this->api_key        = null !== $api_key ? $api_key : $settings['interfast_api_key'];
+		$this->base_url       = rtrim( null !== $base_url ? $base_url : $settings['interfast_api_base_url'], '/' );
+		$this->resource_id    = null !== $resource_id ? $resource_id : $settings['interfast_resource_id'];
+		$this->report_type_id = $settings['interfast_report_type_id'];
 	}
 
 	public function is_configured() {
@@ -105,24 +104,38 @@ class Lion_RDV_Interfast_Client {
 	 *
 	 * InterFast référence les interventions à un client du CRM (`clientId` /
 	 * `addressId`) plutôt que d'accepter des coordonnées en texte libre : on
-	 * crée donc d'abord un client "particulier" avant de créer l'intervention.
-	 *
-	 * ⚠️ Chaque réservation crée un nouveau client CRM, même pour un client
-	 * déjà existant (recherche/déduplication non implémentée — l'endpoint
-	 * `GET /v1/client/search` existe mais son schéma n'a pas été vérifié).
-	 * À améliorer si les doublons deviennent gênants.
+	 * recherche donc d'abord un client existant par email, et on n'en crée un
+	 * nouveau que si aucun ne correspond.
 	 *
 	 * @param array $booking Voir Lion_RDV_Rest_Controller::handle_book_slot() pour la forme exacte.
 	 * @return array{success:bool,event_id:?string,error:?string,raw:mixed}
 	 */
 	public function create_event( array $booking ) {
-		$client_result = $this->create_particular_client( $booking );
+		if ( empty( $this->report_type_id ) ) {
+			return array(
+				'success'  => false,
+				'event_id' => null,
+				'error'    => __( 'Le réglage "ID de modèle de rapport InterFast" (reportTypeId) n\'est pas configuré.', 'lion-rdv-booking' ),
+				'raw'      => null,
+			);
+		}
+
+		$client_result = $this->find_or_create_client( $booking );
 
 		if ( ! $client_result['success'] ) {
 			return array(
 				'success'  => false,
 				'event_id' => null,
 				'error'    => $client_result['error'],
+				'raw'      => $client_result['raw'],
+			);
+		}
+
+		if ( empty( $client_result['client_id'] ) || empty( $client_result['address_id'] ) ) {
+			return array(
+				'success'  => false,
+				'event_id' => null,
+				'error'    => __( 'Client ou adresse InterFast introuvable après création/recherche du client (addressId requis pour créer l\'intervention).', 'lion-rdv-booking' ),
 				'raw'      => $client_result['raw'],
 			);
 		}
@@ -149,6 +162,80 @@ class Lion_RDV_Interfast_Client {
 			'error'    => null,
 			'raw'      => $data,
 		);
+	}
+
+	/**
+	 * Recherche un client existant par email (GET /v1/crm/search) et le
+	 * réutilise si trouvé ; sinon crée un nouveau client "particulier".
+	 *
+	 * @return array{success:bool,client_id:?int,address_id:?int,error:?string,raw:mixed}
+	 */
+	private function find_or_create_client( array $booking ) {
+		$existing = $this->find_client_by_email( $booking['email'] );
+
+		if ( null !== $existing ) {
+			return array(
+				'success'    => true,
+				'client_id'  => $existing['client_id'],
+				'address_id' => $existing['address_id'],
+				'error'      => null,
+				'raw'        => $existing['raw'],
+			);
+		}
+
+		return $this->create_particular_client( $booking );
+	}
+
+	/**
+	 * Cherche un client dont l'email correspond exactement (insensible à la
+	 * casse) à celui de la réservation.
+	 *
+	 * Confirmé via GET /v1/crm/search dans developers.inter-fast.fr. Le
+	 * paramètre `name` y est documenté pour rechercher par nom ; on l'utilise
+	 * ici avec l'email et on ne retient le résultat que s'il correspond
+	 * exactement au champ `email` retourné — sans risque si `name` ne
+	 * matche pas sur l'email (dans ce cas on ne trouve simplement rien et on
+	 * crée un nouveau client, comportement inchangé).
+	 *
+	 * @return array{client_id:int,address_id:?int,raw:mixed}|null
+	 */
+	private function find_client_by_email( $email ) {
+		$response = $this->request(
+			'GET',
+			'/v1/crm/search',
+			array(
+				'name'     => $email,
+				'page'     => 0,
+				'size'     => 20,
+				'archived' => 'false',
+			)
+		);
+
+		if ( ! $response['success'] ) {
+			// Recherche indisponible : on se rabat sur la création, plutôt que
+			// de bloquer toute la réservation pour une optimisation.
+			return null;
+		}
+
+		$items = isset( $response['data']['items'] ) && is_array( $response['data']['items'] ) ? $response['data']['items'] : array();
+
+		foreach ( $items as $item ) {
+			if ( isset( $item['email'] ) && is_string( $item['email'] ) && 0 === strcasecmp( trim( $item['email'] ), trim( $email ) ) ) {
+				$detail = $this->request( 'GET', '/v1/client/' . rawurlencode( $item['id'] ) );
+
+				if ( ! $detail['success'] || empty( $detail['data']['id'] ) ) {
+					continue;
+				}
+
+				return array(
+					'client_id'  => (int) $detail['data']['id'],
+					'address_id' => isset( $detail['data']['primaryAddressId'] ) ? (int) $detail['data']['primaryAddressId'] : null,
+					'raw'        => $detail['data'],
+				);
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -216,15 +303,52 @@ class Lion_RDV_Interfast_Client {
 
 	/**
 	 * Vérification de connexion utilisée par le bouton "Tester la connexion" des réglages.
+	 * Remonte aussi la liste des modèles de rapport disponibles pour faciliter
+	 * la configuration du réglage "ID de modèle de rapport" (reportTypeId).
 	 */
 	public function test_connection() {
-		$now = new DateTimeImmutable( 'now' );
-		return $this->get_events( $now, $now->modify( '+1 day' ) );
+		$now    = new DateTimeImmutable( 'now' );
+		$result = $this->get_events( $now, $now->modify( '+1 day' ) );
+
+		$result['report_types'] = $result['success'] ? $this->get_report_types() : array();
+
+		return $result;
+	}
+
+	/**
+	 * Liste les modèles de rapport (GET /v1/report/types), nécessaires pour
+	 * renseigner `reportTypeId` sur chaque intervention créée.
+	 *
+	 * @return array Liste de ['id' => ..., 'name' => ...] (best-effort, tableau vide si indisponible).
+	 */
+	public function get_report_types() {
+		$response = $this->request( 'GET', '/v1/report/types' );
+
+		if ( ! $response['success'] ) {
+			return array();
+		}
+
+		$raw   = $response['data'];
+		$items = isset( $raw['items'] ) && is_array( $raw['items'] ) ? $raw['items'] : ( is_array( $raw ) ? $raw : array() );
+
+		$types = array();
+		foreach ( $items as $item ) {
+			if ( isset( $item['id'] ) ) {
+				$types[] = array(
+					'id'   => $item['id'],
+					'name' => $item['name'] ?? $item['title'] ?? (string) $item['id'],
+				);
+			}
+		}
+
+		return $types;
 	}
 
 	/**
 	 * Construit le corps de POST /v1/intervention.
-	 * Confirmé via developers.inter-fast.fr (CreateInterventionDto).
+	 * Confirmé via developers.inter-fast.fr (CreateInterventionDto) — 7 champs
+	 * obligatoires : addressId, clientId, importanceLevel, isDescriptionInReport,
+	 * reportTypeId, secondReference, title.
 	 */
 	private function build_intervention_payload( array $booking, $client_id, $address_id ) {
 		$title = sprintf(
@@ -235,18 +359,19 @@ class Lion_RDV_Interfast_Client {
 		);
 
 		$payload = array(
-			'clientId'         => $client_id,
-			'title'            => $title,
-			'description'      => $booking['message'],
-			'start'            => $booking['start']->format( DateTimeInterface::ATOM ),
-			'end'              => $booking['end']->format( DateTimeInterface::ATOM ),
+			'clientId'               => $client_id,
+			'addressId'              => $address_id,
+			'reportTypeId'           => $this->report_type_id,
+			'title'                  => $title,
+			// Référence libre pour retrouver facilement la réservation d'origine.
+			'secondReference'        => 'WEB-' . $booking['start']->format( 'Ymd-Hi' ) . '-' . strtoupper( substr( md5( $booking['email'] . $booking['start']->format( DateTimeInterface::ATOM ) ), 0, 4 ) ),
+			'isDescriptionInReport'  => true,
+			'description'            => $booking['message'],
+			'start'                  => $booking['start']->format( DateTimeInterface::ATOM ),
+			'end'                    => $booking['end']->format( DateTimeInterface::ATOM ),
 			// Le dépannage est traité en priorité "high", l'entretien en "normal".
-			'importanceLevel'  => 'depannage' === $booking['service_type'] ? 'high' : 'normal',
+			'importanceLevel'        => 'depannage' === $booking['service_type'] ? 'high' : 'normal',
 		);
-
-		if ( $address_id ) {
-			$payload['addressId'] = $address_id;
-		}
 
 		if ( ! empty( $this->resource_id ) ) {
 			$payload['primaryTechnicianId'] = (int) $this->resource_id;
