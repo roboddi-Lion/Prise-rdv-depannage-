@@ -18,20 +18,18 @@ class Lion_RDV_Interfast_Client {
 
 	private $api_key;
 	private $base_url;
-	private $technician_ids;
 	private $services;
 
-	public function __construct( $api_key = null, $base_url = null, $technician_ids = null ) {
+	public function __construct( $api_key = null, $base_url = null ) {
 		$settings = Lion_RDV_Settings::get_settings();
 
-		$this->api_key        = null !== $api_key ? $api_key : $settings['interfast_api_key'];
-		$this->base_url       = rtrim( null !== $base_url ? $base_url : $settings['interfast_api_base_url'], '/' );
-		$this->technician_ids = null !== $technician_ids ? $technician_ids : $settings['interfast_technician_ids'];
-		$this->services       = $settings['services'];
+		$this->api_key  = null !== $api_key ? $api_key : $settings['interfast_api_key'];
+		$this->base_url = rtrim( null !== $base_url ? $base_url : $settings['interfast_api_base_url'], '/' );
+		$this->services = $settings['services'];
 	}
 
-	public function get_technician_ids() {
-		return $this->technician_ids;
+	public function get_service( $service_type ) {
+		return $this->services[ $service_type ] ?? null;
 	}
 
 	public function is_configured() {
@@ -52,12 +50,14 @@ class Lion_RDV_Interfast_Client {
 	 *
 	 * Paramètres confirmés via GET /v1/events dans developers.inter-fast.fr.
 	 *
+	 * @param array $technician_ids Filtre optionnel : ne récupérer que les événements de ces techniciens
+	 *                               (le service appelant fournit sa propre liste — voir Lion_RDV_Availability).
 	 * @return array{success:bool,events:array,error:?string} events = liste de
 	 *         ['start' => DateTimeImmutable, 'end' => DateTimeImmutable, 'technician_ids' => int[]]
 	 *         technician_ids = techniciens concernés par l'événement (primaryTechnicianId + users[].id),
 	 *         tableau vide si l'événement n'a aucun technicien assigné.
 	 */
-	public function get_events( DateTimeImmutable $start, DateTimeImmutable $end ) {
+	public function get_events( DateTimeImmutable $start, DateTimeImmutable $end, array $technician_ids = array() ) {
 		$query = array(
 			'start'    => $start->format( DateTimeInterface::ATOM ),
 			'end'      => $end->format( DateTimeInterface::ATOM ),
@@ -70,8 +70,8 @@ class Lion_RDV_Interfast_Client {
 			'meeting'  => 'false',
 		);
 
-		if ( ! empty( $this->technician_ids ) ) {
-			$query['technicians'] = array_values( $this->technician_ids );
+		if ( ! empty( $technician_ids ) ) {
+			$query['technicians'] = array_values( $technician_ids );
 		}
 
 		$response = $this->request( 'GET', '/v1/events', $query );

@@ -89,22 +89,15 @@ $day_labels = array(
 					<p class="description"><?php esc_html_e( 'À confirmer auprès du support InterFast ou de developers.inter-fast.fr si la connexion échoue.', 'lion-rdv-booking' ); ?></p>
 				</td>
 			</tr>
-			<tr>
-				<th scope="row"><label for="interfast_technician_ids"><?php esc_html_e( 'ID techniciens éligibles aux RDV en ligne', 'lion-rdv-booking' ); ?></label></th>
-				<td>
-					<input type="text" id="interfast_technician_ids" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[interfast_technician_ids]" value="<?php echo esc_attr( implode( ', ', $settings['interfast_technician_ids'] ) ); ?>" class="regular-text" placeholder="12, 34, 56" />
-					<p class="description">
-						<?php esc_html_e( 'Identifiants numériques des utilisateurs InterFast (techniciens) pouvant recevoir une intervention réservée en ligne, séparés par des virgules.', 'lion-rdv-booking' ); ?>
-						<strong><?php esc_html_e( 'Fortement recommandé dès que vous avez plusieurs techniciens', 'lion-rdv-booking' ); ?></strong> :
-						<?php esc_html_e( 'un créneau est proposé si AU MOINS UN de ces techniciens est libre, et celui qui est libre lui est automatiquement assigné. Laissé vide, le plugin vérifie le planning de toute l\'entreprise et considère un créneau occupé dès qu\'un seul technicien (parmi tous, même ceux non concernés par les RDV en ligne) a quelque chose de prévu — ce qui peut faire disparaître presque tous les créneaux si votre planning est chargé.', 'lion-rdv-booking' ); ?>
-					</p>
-				</td>
-			</tr>
 		</table>
 
 		<h2><?php esc_html_e( 'Types de rendez-vous proposés', 'lion-rdv-booking' ); ?></h2>
-		<p class="description"><?php esc_html_e( 'Chaque type de rendez-vous a son propre modèle de rapport InterFast (reportTypeId, obligatoire). Cliquez sur « Tester la connexion » plus bas pour voir la liste de vos modèles disponibles et copier le bon ID.', 'lion-rdv-booking' ); ?></p>
-		<table class="widefat" style="max-width:1100px;margin-bottom:1.5em;">
+		<p class="description">
+			<?php esc_html_e( 'Chaque type de rendez-vous a son propre modèle de rapport InterFast (reportTypeId, obligatoire) et sa propre liste de techniciens. Cliquez sur « Tester la connexion » plus bas pour voir la liste de vos modèles disponibles et copier le bon ID.', 'lion-rdv-booking' ); ?>
+			<strong><?php esc_html_e( 'Techniciens : fortement recommandé dès que vous avez plusieurs techniciens.', 'lion-rdv-booking' ); ?></strong>
+			<?php esc_html_e( 'Un créneau n\'est proposé pour ce service que si AU MOINS UN des techniciens listés est libre, et celui qui est libre lui est automatiquement assigné. Laissé vide pour un service, le plugin vérifie le planning de toute l\'entreprise et considère un créneau occupé dès qu\'un seul technicien (même sans rapport avec ce service) a quelque chose de prévu — ce qui peut faire disparaître presque tous les créneaux si votre planning est chargé.', 'lion-rdv-booking' ); ?>
+		</p>
+		<table class="widefat" style="margin-bottom:1.5em;">
 			<thead>
 				<tr>
 					<th><?php esc_html_e( 'Nom affiché', 'lion-rdv-booking' ); ?></th>
@@ -113,6 +106,7 @@ $day_labels = array(
 					<th><?php esc_html_e( 'Préavis min. (h)', 'lion-rdv-booking' ); ?></th>
 					<th><?php esc_html_e( 'Priorité', 'lion-rdv-booking' ); ?></th>
 					<th><?php esc_html_e( 'ID de modèle de rapport (reportTypeId)', 'lion-rdv-booking' ); ?></th>
+					<th><?php esc_html_e( 'ID techniciens (séparés par virgules)', 'lion-rdv-booking' ); ?></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -129,6 +123,7 @@ $day_labels = array(
 						</select>
 					</td>
 					<td><input type="text" required name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[services][<?php echo esc_attr( $service_key ); ?>][report_type_id]" value="<?php echo esc_attr( $service['report_type_id'] ); ?>" class="regular-text" /></td>
+					<td><input type="text" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[services][<?php echo esc_attr( $service_key ); ?>][technician_ids]" value="<?php echo esc_attr( implode( ', ', $service['technician_ids'] ) ); ?>" class="regular-text" placeholder="12, 34, 56" /></td>
 				</tr>
 			<?php endforeach; ?>
 			</tbody>

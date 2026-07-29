@@ -35,6 +35,7 @@ class Lion_RDV_Availability {
 		$service           = $settings['services'][ $service_type ];
 		$duration_minutes  = (int) $service['duration_minutes'];
 		$lead_hours        = (int) $service['lead_time_hours'];
+		$technician_ids    = $service['technician_ids'];
 		$horizon_days      = (int) $settings['horizon_days'];
 		$step_minutes      = (int) $settings['slot_step_minutes'];
 
@@ -44,7 +45,7 @@ class Lion_RDV_Availability {
 		$range_start = $now->setTime( 0, 0, 0 );
 		$range_end   = $range_start->modify( "+{$horizon_days} days" );
 
-		$events_result = $this->client->get_events( $range_start, $range_end );
+		$events_result = $this->client->get_events( $range_start, $range_end, $technician_ids );
 
 		if ( ! $events_result['success'] ) {
 			return array(
@@ -54,10 +55,9 @@ class Lion_RDV_Availability {
 			);
 		}
 
-		$busy_periods   = $events_result['events'];
-		$technician_ids = $settings['interfast_technician_ids'];
-		$days           = array();
-		$day_keys       = array_flip( Lion_RDV_Settings::$days );
+		$busy_periods = $events_result['events'];
+		$days         = array();
+		$day_keys     = array_flip( Lion_RDV_Settings::$days );
 
 		$cursor = $range_start;
 		while ( $cursor < $range_end ) {
@@ -133,10 +133,14 @@ class Lion_RDV_Availability {
 	 * de l'événement InterFast (limite le risque de double réservation), et
 	 * détermine quel technicien libre lui assigner (mode multi-techniciens).
 	 *
+	 * @param string $service_type Clé du service réservé, pour appliquer sa propre liste de techniciens.
 	 * @return array{free:bool,error:?string,technician_id:?int}
 	 */
-	public function is_slot_still_free( DateTimeImmutable $start, DateTimeImmutable $end ) {
-		$result = $this->client->get_events( $start->modify( '-1 minute' ), $end->modify( '+1 minute' ) );
+	public function is_slot_still_free( DateTimeImmutable $start, DateTimeImmutable $end, $service_type ) {
+		$service        = $this->client->get_service( $service_type );
+		$technician_ids = $service['technician_ids'] ?? array();
+
+		$result = $this->client->get_events( $start->modify( '-1 minute' ), $end->modify( '+1 minute' ), $technician_ids );
 
 		if ( ! $result['success'] ) {
 			return array(
@@ -146,7 +150,7 @@ class Lion_RDV_Availability {
 			);
 		}
 
-		$availability = $this->slot_is_available( $start, $end, $result['events'], $this->client->get_technician_ids() );
+		$availability = $this->slot_is_available( $start, $end, $result['events'], $technician_ids );
 
 		return array(
 			'free'          => $availability['available'],

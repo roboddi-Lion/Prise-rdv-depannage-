@@ -40,15 +40,9 @@ class Lion_RDV_Settings {
 		}
 
 		return array(
-			'interfast_api_key'        => '',
-			'interfast_api_base_url'   => 'https://app.inter-fast.fr',
-			// Liste d'ID numériques d'utilisateurs InterFast (techniciens)
-			// éligibles aux RDV pris en ligne. Vide = comportement "planning
-			// global" (voir Lion_RDV_Availability) : à éviter dès que plusieurs
-			// techniciens existent, sous peine de considérer un créneau occupé
-			// dès qu'UN SEUL technicien de l'entreprise a quelque chose de prévu.
-			'interfast_technician_ids' => array(),
-			'horizon_days'             => 30,
+			'interfast_api_key'      => '',
+			'interfast_api_base_url' => 'https://app.inter-fast.fr',
+			'horizon_days'           => 30,
 			'slot_step_minutes'      => 30,
 			'notification_email'     => get_option( 'admin_email' ),
 			'hours'                  => $default_hours,
@@ -58,40 +52,90 @@ class Lion_RDV_Settings {
 
 	/**
 	 * Liste des types de rendez-vous proposés dans le widget. Chaque service a
-	 * sa propre durée, préavis, priorité InterFast et modèle de rapport
-	 * (reportTypeId — obligatoire pour créer une intervention, voir
-	 * developers.inter-fast.fr). Pour ajouter un nouveau service, ajoutez une
-	 * entrée ici avec une clé unique ; son ID de modèle de rapport pourra
-	 * ensuite être ajusté depuis les réglages (bouton "Tester la connexion").
+	 * sa propre durée, préavis, priorité, modèle de rapport InterFast
+	 * (reportTypeId — obligatoire pour créer une intervention) et liste de
+	 * techniciens éligibles (technician_ids — IDs numériques InterFast).
+	 *
+	 * ⚠️ Un créneau n'est proposé que si AU MOINS UN technicien de la liste
+	 * du service est libre ; laisser technician_ids vide bascule ce service
+	 * en mode "planning global" (voir Lion_RDV_Availability), à éviter dès
+	 * que plusieurs techniciens existent chez vous.
+	 *
+	 * Pour ajouter un nouveau service, ajoutez une entrée ici avec une clé
+	 * unique ; elle apparaîtra automatiquement dans les réglages et le widget.
 	 */
 	public static function default_services() {
 		return array(
-			'depannage'      => array(
-				'label'            => __( 'Dépannage', 'lion-rdv-booking' ),
-				'description'      => __( 'Panne, urgence, intervention rapide', 'lion-rdv-booking' ),
-				'duration_minutes' => 60,
-				'lead_time_hours'  => 4,
-				'importance_level' => 'high',
-				// "Dépannage"
-				'report_type_id'   => '8ce790fa-a7d7-413a-a2c9-4d6cc822b93d',
+			'entretien_clim'            => array(
+				'label'            => __( 'Entretien climatisation', 'lion-rdv-booking' ),
+				'description'      => __( 'Entretien de climatisation', 'lion-rdv-booking' ),
+				'duration_minutes' => 90,
+				'lead_time_hours'  => 24,
+				'importance_level' => 'normal',
+				// "Entretien de climatisation"
+				'report_type_id'   => '31817e50-c605-4fd9-ac93-c47ba7a0a8bc',
+				'technician_ids'   => array(),
 			),
-			'entretien'      => array(
-				'label'            => __( 'Entretien chaudière', 'lion-rdv-booking' ),
-				'description'      => __( 'Entretien annuel de chaudière (gaz, fioul, bois)', 'lion-rdv-booking' ),
+			'entretien_pac'             => array(
+				'label'            => __( 'Entretien PAC', 'lion-rdv-booking' ),
+				'description'      => __( 'Entretien de pompe à chaleur', 'lion-rdv-booking' ),
+				'duration_minutes' => 90,
+				'lead_time_hours'  => 24,
+				'importance_level' => 'normal',
+				// "Entretien de PAC"
+				'report_type_id'   => 'e6783f26-a4b0-4f5b-845b-0e7622ca66ae',
+				'technician_ids'   => array(),
+			),
+			'entretien_chaudiere_gaz'   => array(
+				'label'            => __( 'Entretien chaudière gaz', 'lion-rdv-booking' ),
+				'description'      => __( 'Entretien annuel de chaudière à gaz', 'lion-rdv-booking' ),
 				'duration_minutes' => 90,
 				'lead_time_hours'  => 24,
 				'importance_level' => 'normal',
 				// "Entretien de chaudière à gaz"
 				'report_type_id'   => 'd6c59ab3-085b-4436-8f1e-602904a62fba',
+				'technician_ids'   => array(),
 			),
-			'entretien_clim' => array(
-				'label'            => __( 'Entretien climatisation / PAC', 'lion-rdv-booking' ),
-				'description'      => __( 'Entretien de climatisation ou de pompe à chaleur', 'lion-rdv-booking' ),
+			'entretien_chaudiere_fioul' => array(
+				'label'            => __( 'Entretien chaudière fioul', 'lion-rdv-booking' ),
+				'description'      => __( 'Entretien annuel de chaudière à fioul', 'lion-rdv-booking' ),
 				'duration_minutes' => 90,
 				'lead_time_hours'  => 24,
 				'importance_level' => 'normal',
-				// "Entretien - Maintenance de PAC et climatisation"
-				'report_type_id'   => 'a387bfb1-c156-4611-a0f0-d2364c72003e',
+				// "Entretien chaudière fioul"
+				'report_type_id'   => 'fa100fc5-d9a3-452e-b0cf-303a84fbba5f',
+				'technician_ids'   => array(),
+			),
+			'depannage_clim_pac'        => array(
+				'label'            => __( 'Dépannage climatisation / PAC', 'lion-rdv-booking' ),
+				'description'      => __( 'Panne de climatisation ou de pompe à chaleur', 'lion-rdv-booking' ),
+				'duration_minutes' => 60,
+				'lead_time_hours'  => 4,
+				'importance_level' => 'high',
+				// Pas de modèle "dépannage clim/PAC" dédié trouvé dans le catalogue :
+				// "Dépannage" générique par défaut, à ajuster si besoin.
+				'report_type_id'   => '8ce790fa-a7d7-413a-a2c9-4d6cc822b93d',
+				'technician_ids'   => array(),
+			),
+			'depannage_chaudiere'       => array(
+				'label'            => __( 'Dépannage chaudière', 'lion-rdv-booking' ),
+				'description'      => __( 'Panne de chaudière', 'lion-rdv-booking' ),
+				'duration_minutes' => 60,
+				'lead_time_hours'  => 4,
+				'importance_level' => 'high',
+				// Pas de modèle "dépannage chaudière" dédié trouvé : "Dépannage" générique.
+				'report_type_id'   => '8ce790fa-a7d7-413a-a2c9-4d6cc822b93d',
+				'technician_ids'   => array(),
+			),
+			'depannage_plomberie'       => array(
+				'label'            => __( 'Dépannage plomberie', 'lion-rdv-booking' ),
+				'description'      => __( 'Panne de plomberie', 'lion-rdv-booking' ),
+				'duration_minutes' => 60,
+				'lead_time_hours'  => 4,
+				'importance_level' => 'high',
+				// Pas de modèle "dépannage plomberie" dédié trouvé : "Dépannage" générique.
+				'report_type_id'   => '8ce790fa-a7d7-413a-a2c9-4d6cc822b93d',
+				'technician_ids'   => array(),
 			),
 		);
 	}
@@ -148,26 +192,31 @@ class Lion_RDV_Settings {
 		);
 	}
 
-	public function sanitize_settings( $input ) {
-		$defaults = self::default_settings();
-		$clean    = array();
-
-		$clean['interfast_api_key']      = isset( $input['interfast_api_key'] ) ? sanitize_text_field( $input['interfast_api_key'] ) : '';
-		$clean['interfast_api_base_url'] = isset( $input['interfast_api_base_url'] ) ? esc_url_raw( trim( $input['interfast_api_base_url'] ) ) : $defaults['interfast_api_base_url'];
-
-		$technician_ids_raw               = isset( $input['interfast_technician_ids'] ) ? (string) $input['interfast_technician_ids'] : '';
-		$clean['interfast_technician_ids'] = array_values(
+	/**
+	 * Convertit une liste d'ID techniciens séparés par des virgules (ex. "12, 34, 56")
+	 * en tableau d'entiers uniques, sans les valeurs vides/invalides.
+	 */
+	private function parse_technician_ids( $raw ) {
+		return array_values(
 			array_unique(
 				array_filter(
 					array_map(
 						static function ( $id ) {
 							return (int) trim( $id );
 						},
-						explode( ',', $technician_ids_raw )
+						explode( ',', (string) $raw )
 					)
 				)
 			)
 		);
+	}
+
+	public function sanitize_settings( $input ) {
+		$defaults = self::default_settings();
+		$clean    = array();
+
+		$clean['interfast_api_key']      = isset( $input['interfast_api_key'] ) ? sanitize_text_field( $input['interfast_api_key'] ) : '';
+		$clean['interfast_api_base_url'] = isset( $input['interfast_api_base_url'] ) ? esc_url_raw( trim( $input['interfast_api_base_url'] ) ) : $defaults['interfast_api_base_url'];
 
 		$clean['horizon_days']       = max( 1, min( 180, (int) ( $input['horizon_days'] ?? $defaults['horizon_days'] ) ) );
 		$clean['slot_step_minutes']  = max( 0, (int) ( $input['slot_step_minutes'] ?? $defaults['slot_step_minutes'] ) );
@@ -186,6 +235,7 @@ class Lion_RDV_Settings {
 				'lead_time_hours'  => max( 0, (int) ( $service_input['lead_time_hours'] ?? $default_service['lead_time_hours'] ) ),
 				'importance_level' => in_array( $service_input['importance_level'] ?? '', array( 'normal', 'high' ), true ) ? $service_input['importance_level'] : $default_service['importance_level'],
 				'report_type_id'   => isset( $service_input['report_type_id'] ) ? sanitize_text_field( $service_input['report_type_id'] ) : $default_service['report_type_id'],
+				'technician_ids'   => $this->parse_technician_ids( $service_input['technician_ids'] ?? '' ),
 			);
 		}
 

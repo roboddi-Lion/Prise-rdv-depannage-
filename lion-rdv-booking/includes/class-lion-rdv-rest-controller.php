@@ -173,7 +173,7 @@ class Lion_RDV_Rest_Controller {
 
 		try {
 			$availability = new Lion_RDV_Availability();
-			$still_free   = $availability->is_slot_still_free( $start, $end );
+			$still_free   = $availability->is_slot_still_free( $start, $end, $service_type );
 
 			if ( null !== $still_free['error'] ) {
 				return new WP_REST_Response(

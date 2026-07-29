@@ -15,16 +15,23 @@ de l'agenda **InterFast**.
    - l'**URL de base de l'API** InterFast (`https://app.inter-fast.fr`)
    - les **horaires d'ouverture** par jour (matin / après-midi)
    - l'**email de notification interne** (par défaut : l'email admin du site)
-   - le tableau **« Types de rendez-vous proposés »** : trois lignes
-     préconfigurées (Dépannage, Entretien chaudière, Entretien climatisation
-     / PAC), chacune avec son nom affiché, sa description, sa durée, son
-     préavis minimum, sa priorité et son **ID de modèle de rapport**
-     (`reportTypeId`, obligatoire)
+   - le tableau **« Types de rendez-vous proposés »** : sept lignes
+     préconfigurées (Entretien climatisation, Entretien PAC, Entretien
+     chaudière gaz, Entretien chaudière fioul, Dépannage climatisation/PAC,
+     Dépannage chaudière, Dépannage plomberie), chacune avec son nom affiché,
+     sa description, sa durée, son préavis minimum, sa priorité, son **ID de
+     modèle de rapport** (`reportTypeId`, obligatoire) et ses **ID
+     techniciens** (voir ci-dessous)
 4. Cliquez sur **« Tester la connexion InterFast »** : la liste complète de
    vos modèles de rapport InterFast s'affiche, pour ajuster l'ID de modèle
-   d'une ligne si la valeur préremplie ne correspond pas à votre activité
-   (ex. entretien de chaudière fioul/bois plutôt que gaz).
-5. Ajoutez le shortcode `[lion_rdv_booking]` sur la page « Prise de rendez-vous »
+   d'une ligne si la valeur préremplie ne correspond pas à votre activité —
+   en particulier pour les 3 services de dépannage, préremplis avec le
+   modèle générique « Dépannage » faute de modèle plus spécifique trouvé
+   dans votre catalogue.
+5. Pour chaque ligne, renseignez les **ID techniciens** (identifiants
+   numériques InterFast, séparés par des virgules) habilités à réaliser ce
+   type d'intervention.
+6. Ajoutez le shortcode `[lion_rdv_booking]` sur la page « Prise de rendez-vous »
    de votre site.
 
 ### Ajouter un nouveau type de rendez-vous
@@ -70,19 +77,21 @@ est réutilisé ; sinon un nouveau client "particulier" est créé. Si la
 recherche échoue (API indisponible), le plugin se rabat sur la création
 d'un nouveau client plutôt que de bloquer la réservation.
 
-### Plusieurs techniciens : champ « ID techniciens éligibles aux RDV en ligne »
+### Techniciens par type de rendez-vous
 
 **Important si votre équipe compte plusieurs techniciens dans InterFast.**
-Par défaut (champ vide), le plugin vérifie le planning de **toute
-l'entreprise** et considère un créneau occupé dès qu'**un seul** technicien
-(même un qui ne prend jamais de RDV en ligne) a quelque chose de prévu — sur
-un planning chargé, ça peut faire disparaître presque tous les créneaux.
+Chaque service (ligne du tableau « Types de rendez-vous proposés ») a sa
+propre liste de techniciens (`technician_ids`). Un créneau n'est proposé
+pour ce service que si **au moins un** des techniciens listés est libre, et
+celui qui est libre lui est automatiquement assigné (`primaryTechnicianId`)
+au moment de la réservation.
 
-Renseignez la liste des identifiants numériques InterFast des techniciens
-pouvant recevoir un RDV pris en ligne (ex. `12, 34, 56`). Le plugin
-considère alors un créneau libre dès qu'**au moins un** de ces techniciens
-n'a rien de prévu, et lui assigne automatiquement l'intervention
-(`primaryTechnicianId`) au moment de la réservation.
+Si la liste est laissée vide pour un service, le plugin vérifie le planning
+de **toute l'entreprise** et considère un créneau occupé dès qu'**un seul**
+technicien (même sans rapport avec ce service) a quelque chose de prévu —
+sur un planning chargé, ça peut faire disparaître presque tous les
+créneaux. Laissez donc toujours au moins un technicien renseigné par service
+dès que vous avez plusieurs techniciens.
 
 ## Fonctionnement
 
