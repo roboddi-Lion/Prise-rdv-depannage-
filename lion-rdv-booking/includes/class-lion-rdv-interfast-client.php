@@ -43,19 +43,36 @@ class Lion_RDV_Interfast_Client {
 	}
 
 	/**
-	 * Récupère les événements (interventions/RDV déjà planifiés) sur une plage de dates,
-	 * pour pouvoir en déduire les créneaux encore libres.
+	 * Nombre maximum d'événements récupérés en une seule page. Largement
+	 * suffisant pour l'horizon de réservation d'une PME ; si votre planning
+	 * dépasse ce volume sur la période, augmentez cette valeur (voir aussi
+	 * le champ `count` retourné par l'API pour détecter une troncature).
+	 */
+	const EVENTS_PAGE_SIZE = 1000;
+
+	/**
+	 * Récupère les événements (interventions/RDV/absences/tâches déjà planifiés)
+	 * sur une plage de dates, pour pouvoir en déduire les créneaux encore libres.
+	 *
+	 * Paramètres confirmés via GET /v1/events dans developers.inter-fast.fr.
 	 *
 	 * @return array{success:bool,events:array,error:?string} events = liste de ['start' => DateTimeImmutable, 'end' => DateTimeImmutable]
 	 */
 	public function get_events( DateTimeImmutable $start, DateTimeImmutable $end ) {
 		$query = array(
-			'date_start' => $start->format( DateTimeInterface::ATOM ),
-			'date_end'   => $end->format( DateTimeInterface::ATOM ),
+			'start'    => $start->format( DateTimeInterface::ATOM ),
+			'end'      => $end->format( DateTimeInterface::ATOM ),
+			'page'     => 0,
+			'count'    => self::EVENTS_PAGE_SIZE,
+			'archived' => 'false',
+			// meeting=false : pas de restriction aux seuls rendez-vous, on veut
+			// la vue unifiée (interventions + RDV + absences + tâches) pour
+			// calculer correctement les créneaux occupés.
+			'meeting'  => 'false',
 		);
 
 		if ( ! empty( $this->resource_id ) ) {
-			$query['resource_id'] = $this->resource_id;
+			$query['technicians'] = array( $this->resource_id );
 		}
 
 		$response = $this->request( 'GET', '/v1/events', $query );
@@ -66,31 +83,17 @@ class Lion_RDV_Interfast_Client {
 
 		$events = array();
 		$raw    = $response['data'];
-
-		// La plupart des API listant des ressources renvoient soit un tableau
-		// brut, soit un objet avec une clé "data"/"items"/"results".
-		if ( isset( $raw['data'] ) && is_array( $raw['data'] ) ) {
-			$items = $raw['data'];
-		} elseif ( isset( $raw['items'] ) && is_array( $raw['items'] ) ) {
-			$items = $raw['items'];
-		} elseif ( is_array( $raw ) && ( empty( $raw ) || array_keys( $raw ) === range( 0, count( $raw ) - 1 ) ) ) {
-			$items = $raw;
-		} else {
-			$items = array();
-		}
+		$items  = isset( $raw['items'] ) && is_array( $raw['items'] ) ? $raw['items'] : array();
 
 		foreach ( $items as $item ) {
-			$item_start = $item['date_start'] ?? $item['start'] ?? null;
-			$item_end   = $item['date_end'] ?? $item['end'] ?? null;
-
-			if ( ! $item_start || ! $item_end ) {
+			if ( empty( $item['start'] ) || empty( $item['end'] ) ) {
 				continue;
 			}
 
 			try {
 				$events[] = array(
-					'start' => new DateTimeImmutable( $item_start ),
-					'end'   => new DateTimeImmutable( $item_end ),
+					'start' => new DateTimeImmutable( $item['start'] ),
+					'end'   => new DateTimeImmutable( $item['end'] ),
 				);
 			} catch ( Exception $e ) {
 				continue;
@@ -187,7 +190,9 @@ class Lion_RDV_Interfast_Client {
 		$url = $this->base_url . $path;
 
 		if ( ! empty( $query ) ) {
-			$url = add_query_arg( $query, $url );
+			// http_build_query() encode correctement les valeurs (nos dates ISO
+			// contiennent des `+` et `:`), contrairement à add_query_arg() de WP.
+			$url .= '?' . http_build_query( $query, '', '&', PHP_QUERY_RFC3986 );
 		}
 
 		$args = array(
