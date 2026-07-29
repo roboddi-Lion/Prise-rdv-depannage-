@@ -319,7 +319,13 @@ class Lion_RDV_Interfast_Client {
 	 * Liste les modèles de rapport (GET /v1/report/types), nécessaires pour
 	 * renseigner `reportTypeId` sur chaque intervention créée.
 	 *
-	 * @return array Liste de ['id' => ..., 'name' => ...] (best-effort, tableau vide si indisponible).
+	 * ⚠️ Le schéma exact de cette réponse n'a pas été confirmé dans la doc
+	 * (contrairement aux autres endpoints utilisés par ce plugin) : le
+	 * parsing ci-dessous essaie plusieurs noms de champs plausibles, et
+	 * affiche le JSON brut de l'entrée en dernier recours plutôt qu'une
+	 * ligne vide, pour que l'ID reste repérable à l'oeil dans tous les cas.
+	 *
+	 * @return array Liste de ['id' => string, 'name' => string] (best-effort, tableau vide si indisponible).
 	 */
 	public function get_report_types() {
 		$response = $this->request( 'GET', '/v1/report/types' );
@@ -333,10 +339,27 @@ class Lion_RDV_Interfast_Client {
 
 		$types = array();
 		foreach ( $items as $item ) {
-			if ( isset( $item['id'] ) ) {
+			if ( is_array( $item ) ) {
+				$id = $item['id'] ?? $item['reportTypeId'] ?? $item['_id'] ?? null;
+
+				if ( null !== $id && '' !== $id ) {
+					$types[] = array(
+						'id'   => (string) $id,
+						'name' => (string) ( $item['name'] ?? $item['title'] ?? $item['label'] ?? '' ),
+					);
+					continue;
+				}
+
+				// Champ id introuvable sous les noms attendus : on affiche
+				// l'entrée brute pour que l'ID reste visible/copiable.
 				$types[] = array(
-					'id'   => $item['id'],
-					'name' => $item['name'] ?? $item['title'] ?? (string) $item['id'],
+					'id'   => '',
+					'name' => wp_json_encode( $item ),
+				);
+			} elseif ( is_scalar( $item ) ) {
+				$types[] = array(
+					'id'   => (string) $item,
+					'name' => '',
 				);
 			}
 		}

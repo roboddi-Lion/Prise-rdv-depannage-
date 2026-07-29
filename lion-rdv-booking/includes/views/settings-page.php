@@ -7,8 +7,14 @@ $settings   = Lion_RDV_Settings::get_settings();
 $test_result = null;
 
 if ( isset( $_GET['lion_rdv_tested'] ) ) {
-	$test_result = get_transient( 'lion_rdv_test_connection_result' );
+	$stored = get_transient( 'lion_rdv_test_connection_result' );
 	delete_transient( 'lion_rdv_test_connection_result' );
+
+	// Le paramètre `lion_rdv_tested` peut se retrouver dans l'URL après un
+	// simple enregistrement des réglages (WordPress réutilise l'URL de
+	// retour du formulaire) : on n'affiche le résultat que s'il a
+	// effectivement été retrouvé (le transient a pu être déjà consommé/expiré).
+	$test_result = is_array( $stored ) ? $stored : null;
 }
 
 $day_labels = array(
