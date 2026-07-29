@@ -23,25 +23,31 @@ de l'agenda **InterFast**.
 
 ## ⚠️ Point à vérifier avant mise en production : l'intégration InterFast
 
-La documentation développeur officielle d'InterFast
-(`https://developers.inter-fast.fr/`) n'a pas pu être consultée
-automatiquement depuis l'environnement où ce plugin a été développé (accès
-bloqué par la politique réseau de la session). L'intégration a donc été
-construite à partir des informations publiques connues :
+Confirmé via `https://developers.inter-fast.fr/` (référence OpenAPI) :
 
-- authentification par en-tête `X-API-KEY`
-- module « Opérations » exposant les Événements / Interventions
+- Serveur API : `https://app.inter-fast.fr` (les chemins incluent déjà `/v1`,
+  pas de préfixe `/api`)
+- Authentification par en-tête `X-API-KEY`
+- `GET /v1/events` : vue unifiée du planning, sert à calculer les créneaux libres
+- `POST /v1/intervention` : création d'une intervention
 
-Avant la mise en production, **confirmez avec le support InterFast (ou via
-la doc développeur) les points suivants**, et ajustez si besoin le fichier
-`lion-rdv-booking/includes/class-lion-rdv-interfast-client.php` (les zones
-concernées sont clairement commentées) :
+**Important** : l'accès à l'API InterFast est réservé aux comptes avec
+l'abonnement **Business**.
 
-- le chemin exact des endpoints (`/operations/events` est une supposition)
-- les noms des champs de date (`date_start`/`date_end` vs `start`/`end`, etc.)
-- la structure exacte du payload attendu pour créer un événement/une
-  intervention (champs client, type, ressource/technicien assigné…)
-- la forme de la réponse liste (`data`, `items`, tableau brut…)
+La doc n'a listé que les chemins d'endpoints, pas encore le détail des
+paramètres/schémas (accès direct à developers.inter-fast.fr bloqué depuis
+l'environnement de développement). Avant la mise en production, **ouvrez ces
+deux endpoints dans la doc et confirmez** (puis ajustez si besoin
+`lion-rdv-booking/includes/class-lion-rdv-interfast-client.php`, zones
+clairement commentées) :
+
+- `GET /v1/events` : noms exacts des paramètres de filtrage par date, et
+  forme de la réponse (`data`, `items`, tableau brut…)
+- `POST /v1/intervention` : schéma exact du corps attendu — en particulier,
+  le client est-il référencé via un `client_id` existant (module CRM séparé
+  visible dans la doc), ou peut-il être envoyé en objet inline comme
+  actuellement dans le code ? Si un `client_id` est requis, il faudra ajouter
+  un appel préalable de recherche/création du client dans le module CRM.
 
 Le bouton **« Tester la connexion InterFast »** dans les réglages du plugin
 permet de valider rapidement ces ajustements sans avoir à modifier le code

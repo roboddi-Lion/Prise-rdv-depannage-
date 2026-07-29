@@ -6,17 +6,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Client HTTP pour l'API InterFast (module Opérations / Événements-Interventions).
  *
- * ⚠️ À VÉRIFIER AVANT MISE EN PRODUCTION ⚠️
- * La documentation officielle (https://developers.inter-fast.fr/) n'a pas pu
- * être consultée automatiquement depuis cet environnement (accès bloqué).
- * Les chemins d'endpoints et les noms de champs ci-dessous sont construits à
- * partir des informations publiques connues (authentification par en-tête
- * X-API-KEY, module "Opérations" exposant Événements / Interventions) mais
- * DOIVENT être confirmés avec le support InterFast ou la doc développeur,
- * puis ajustés dans ce fichier si besoin — en particulier dans
- * `get_events()` et `build_event_payload()`. Un bouton "Tester la
- * connexion" est disponible dans les réglages du plugin pour valider
- * rapidement les ajustements.
+ * Confirmé via https://developers.inter-fast.fr/ (référence OpenAPI) :
+ * - Serveur : https://app.inter-fast.fr (les chemins incluent déjà /v1)
+ * - Auth par en-tête X-API-KEY
+ * - GET  /v1/events        → vue unifiée du planning (sert à calculer les créneaux libres)
+ * - POST /v1/intervention  → création d'une intervention
+ *
+ * ⚠️ ENCORE À CONFIRMER ⚠️
+ * La doc de référence n'a listé que les chemins d'endpoints, pas le détail
+ * des paramètres/schémas (accès direct à developers.inter-fast.fr bloqué
+ * depuis cet environnement). Restent à vérifier :
+ * - les noms exacts des paramètres de filtrage par date sur GET /v1/events
+ * - le schéma exact du corps attendu par POST /v1/intervention (en
+ *   particulier : réfère-t-on le client via `client_id` — vu la présence
+ *   d'un module CRM/Clients séparé — ou peut-on l'envoyer en objet inline
+ *   comme fait ci-dessous ?)
+ * Ajustez `get_events()` et `build_event_payload()` en conséquence. Le
+ * bouton "Tester la connexion" des réglages permet de valider rapidement.
  */
 class Lion_RDV_Interfast_Client {
 
@@ -52,7 +58,7 @@ class Lion_RDV_Interfast_Client {
 			$query['resource_id'] = $this->resource_id;
 		}
 
-		$response = $this->request( 'GET', '/operations/events', $query );
+		$response = $this->request( 'GET', '/v1/events', $query );
 
 		if ( ! $response['success'] ) {
 			return $response;
@@ -107,7 +113,7 @@ class Lion_RDV_Interfast_Client {
 	public function create_event( array $booking ) {
 		$payload = $this->build_event_payload( $booking );
 
-		$response = $this->request( 'POST', '/operations/events', array(), $payload );
+		$response = $this->request( 'POST', '/v1/intervention', array(), $payload );
 
 		if ( ! $response['success'] ) {
 			return array(
