@@ -97,10 +97,17 @@ $day_labels = array(
 				</td>
 			</tr>
 			<tr>
-				<th scope="row"><label for="interfast_report_type_id"><?php esc_html_e( 'ID de modèle de rapport InterFast', 'lion-rdv-booking' ); ?></label></th>
+				<th scope="row"><label for="interfast_report_type_id_depannage"><?php esc_html_e( 'ID de modèle de rapport - Dépannage', 'lion-rdv-booking' ); ?></label></th>
 				<td>
-					<input type="text" id="interfast_report_type_id" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[interfast_report_type_id]" value="<?php echo esc_attr( $settings['interfast_report_type_id'] ); ?>" class="regular-text" required />
-					<p class="description"><?php esc_html_e( 'Obligatoire pour créer une intervention (reportTypeId). Enregistrez vos réglages puis cliquez sur « Tester la connexion » ci-dessous : la liste de vos modèles de rapport InterFast s\'affichera pour copier le bon ID.', 'lion-rdv-booking' ); ?></p>
+					<input type="text" id="interfast_report_type_id_depannage" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[interfast_report_type_id_depannage]" value="<?php echo esc_attr( $settings['interfast_report_type_id_depannage'] ); ?>" class="regular-text" required />
+					<p class="description"><?php esc_html_e( 'Obligatoire (reportTypeId). Pré-rempli avec le modèle « Dépannage ». Cliquez sur « Tester la connexion » ci-dessous pour voir tous vos modèles disponibles et en choisir un autre si besoin.', 'lion-rdv-booking' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="interfast_report_type_id_entretien"><?php esc_html_e( 'ID de modèle de rapport - Entretien', 'lion-rdv-booking' ); ?></label></th>
+				<td>
+					<input type="text" id="interfast_report_type_id_entretien" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[interfast_report_type_id_entretien]" value="<?php echo esc_attr( $settings['interfast_report_type_id_entretien'] ); ?>" class="regular-text" required />
+					<p class="description"><?php esc_html_e( 'Obligatoire (reportTypeId). Pré-rempli avec le modèle « Entretien de chaudière à gaz ». Si vos entretiens concernent aussi le fioul, le bois ou les poêles, choisissez un autre modèle dans la liste (ou dupliquez/adaptez la logique par type d\'énergie plus tard si besoin).', 'lion-rdv-booking' ); ?></p>
 				</td>
 			</tr>
 		</table>

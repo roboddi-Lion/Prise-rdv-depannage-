@@ -40,10 +40,12 @@ class Lion_RDV_Settings {
 		}
 
 		return array(
-			'interfast_api_key'        => '',
-			'interfast_api_base_url'   => 'https://app.inter-fast.fr',
-			'interfast_resource_id'    => '',
-			'interfast_report_type_id' => '',
+			'interfast_api_key'                    => '',
+			'interfast_api_base_url'                => 'https://app.inter-fast.fr',
+			'interfast_resource_id'                 => '',
+			// Modèles de rapport InterFast (Chauffage/Chaudière) — Réglages > Prise de RDV Lion > Tester la connexion pour voir/changer la liste.
+			'interfast_report_type_id_depannage'    => '8ce790fa-a7d7-413a-a2c9-4d6cc822b93d', // "Dépannage"
+			'interfast_report_type_id_entretien'    => 'd6c59ab3-085b-4436-8f1e-602904a62fba', // "Entretien de chaudière à gaz"
 			'duration_depannage'     => 60,
 			'duration_entretien'     => 90,
 			'lead_time_depannage'    => 4,
@@ -95,10 +97,11 @@ class Lion_RDV_Settings {
 		$defaults = self::default_settings();
 		$clean    = array();
 
-		$clean['interfast_api_key']        = isset( $input['interfast_api_key'] ) ? sanitize_text_field( $input['interfast_api_key'] ) : '';
-		$clean['interfast_api_base_url']   = isset( $input['interfast_api_base_url'] ) ? esc_url_raw( trim( $input['interfast_api_base_url'] ) ) : $defaults['interfast_api_base_url'];
-		$clean['interfast_resource_id']    = isset( $input['interfast_resource_id'] ) ? sanitize_text_field( $input['interfast_resource_id'] ) : '';
-		$clean['interfast_report_type_id'] = isset( $input['interfast_report_type_id'] ) ? sanitize_text_field( $input['interfast_report_type_id'] ) : '';
+		$clean['interfast_api_key']                 = isset( $input['interfast_api_key'] ) ? sanitize_text_field( $input['interfast_api_key'] ) : '';
+		$clean['interfast_api_base_url']            = isset( $input['interfast_api_base_url'] ) ? esc_url_raw( trim( $input['interfast_api_base_url'] ) ) : $defaults['interfast_api_base_url'];
+		$clean['interfast_resource_id']             = isset( $input['interfast_resource_id'] ) ? sanitize_text_field( $input['interfast_resource_id'] ) : '';
+		$clean['interfast_report_type_id_depannage'] = isset( $input['interfast_report_type_id_depannage'] ) ? sanitize_text_field( $input['interfast_report_type_id_depannage'] ) : $defaults['interfast_report_type_id_depannage'];
+		$clean['interfast_report_type_id_entretien'] = isset( $input['interfast_report_type_id_entretien'] ) ? sanitize_text_field( $input['interfast_report_type_id_entretien'] ) : $defaults['interfast_report_type_id_entretien'];
 
 		$clean['duration_depannage']  = max( 15, (int) ( $input['duration_depannage'] ?? $defaults['duration_depannage'] ) );
 		$clean['duration_entretien']  = max( 15, (int) ( $input['duration_entretien'] ?? $defaults['duration_entretien'] ) );

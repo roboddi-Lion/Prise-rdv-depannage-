@@ -16,12 +16,13 @@ de l'agenda **InterFast**.
    - les **horaires d'ouverture** par jour (matin / après-midi)
    - les **durées** et **délais de préavis** pour le dépannage et l'entretien
    - l'**email de notification interne** (par défaut : l'email admin du site)
-   - laissez pour l'instant le champ **« ID de modèle de rapport »** vide
-4. Cliquez sur **« Tester la connexion InterFast »**. Si la connexion
-   fonctionne, la liste de vos modèles de rapport InterFast s'affiche :
-   copiez l'ID voulu dans le champ **« ID de modèle de rapport »**,
-   enregistrez à nouveau. Ce champ est **obligatoire** pour créer une
-   intervention (`reportTypeId`).
+   - les **ID de modèle de rapport** Dépannage et Entretien (`reportTypeId`,
+     obligatoires) — préremplis avec les modèles « Dépannage » et « Entretien
+     de chaudière à gaz », à ajuster si besoin (voir étape suivante)
+4. Cliquez sur **« Tester la connexion InterFast »** : la liste complète de
+   vos modèles de rapport InterFast s'affiche, pour changer l'un ou l'autre
+   des deux ID si les valeurs préremplies ne correspondent pas à votre
+   activité (ex. entretien de chaudière fioul/bois plutôt que gaz).
 5. Ajoutez le shortcode `[lion_rdv_booking]` sur la page « Prise de rendez-vous »
    de votre site.
 

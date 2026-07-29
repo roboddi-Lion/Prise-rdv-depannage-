@@ -19,7 +19,7 @@ class Lion_RDV_Interfast_Client {
 	private $api_key;
 	private $base_url;
 	private $resource_id;
-	private $report_type_id;
+	private $report_type_ids;
 
 	public function __construct( $api_key = null, $base_url = null, $resource_id = null ) {
 		$settings = Lion_RDV_Settings::get_settings();
@@ -27,7 +27,10 @@ class Lion_RDV_Interfast_Client {
 		$this->api_key        = null !== $api_key ? $api_key : $settings['interfast_api_key'];
 		$this->base_url       = rtrim( null !== $base_url ? $base_url : $settings['interfast_api_base_url'], '/' );
 		$this->resource_id    = null !== $resource_id ? $resource_id : $settings['interfast_resource_id'];
-		$this->report_type_id = $settings['interfast_report_type_id'];
+		$this->report_type_ids = array(
+			'depannage' => $settings['interfast_report_type_id_depannage'],
+			'entretien' => $settings['interfast_report_type_id_entretien'],
+		);
 	}
 
 	public function is_configured() {
@@ -111,11 +114,11 @@ class Lion_RDV_Interfast_Client {
 	 * @return array{success:bool,event_id:?string,error:?string,raw:mixed}
 	 */
 	public function create_event( array $booking ) {
-		if ( empty( $this->report_type_id ) ) {
+		if ( empty( $this->report_type_ids[ $booking['service_type'] ] ) ) {
 			return array(
 				'success'  => false,
 				'event_id' => null,
-				'error'    => __( 'Le réglage "ID de modèle de rapport InterFast" (reportTypeId) n\'est pas configuré.', 'lion-rdv-booking' ),
+				'error'    => __( 'Le réglage "ID de modèle de rapport InterFast" n\'est pas configuré pour ce type d\'intervention.', 'lion-rdv-booking' ),
 				'raw'      => null,
 			);
 		}
@@ -384,7 +387,7 @@ class Lion_RDV_Interfast_Client {
 		$payload = array(
 			'clientId'               => $client_id,
 			'addressId'              => $address_id,
-			'reportTypeId'           => $this->report_type_id,
+			'reportTypeId'           => $this->report_type_ids[ $booking['service_type'] ],
 			'title'                  => $title,
 			// Référence libre pour retrouver facilement la réservation d'origine.
 			'secondReference'        => 'WEB-' . $booking['start']->format( 'Ymd-Hi' ) . '-' . strtoupper( substr( md5( $booking['email'] . $booking['start']->format( DateTimeInterface::ATOM ) ), 0, 4 ) ),
