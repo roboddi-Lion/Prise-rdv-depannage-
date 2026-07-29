@@ -24,6 +24,8 @@ class Lion_RDV_Plugin {
 		new Lion_RDV_Settings();
 		new Lion_RDV_Rest_Controller();
 		new Lion_RDV_Shortcode();
+
+		Lion_RDV_Notifications::init();
 	}
 
 	public function load_textdomain() {

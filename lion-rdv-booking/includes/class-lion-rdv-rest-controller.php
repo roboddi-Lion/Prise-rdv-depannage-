@@ -209,7 +209,7 @@ class Lion_RDV_Rest_Controller {
 			$client           = new Lion_RDV_Interfast_Client();
 			$interfast_result = $client->create_event( $booking );
 
-			Lion_RDV_DB::insert_booking(
+			$booking_id = Lion_RDV_DB::insert_booking(
 				array(
 					'created_at'         => current_time( 'mysql' ),
 					'service_type'       => $service_type,
@@ -230,7 +230,19 @@ class Lion_RDV_Rest_Controller {
 				)
 			);
 
-			Lion_RDV_Notifications::send_internal_notification( $booking, $interfast_result );
+			$email_result = $interfast_result['success']
+				? Lion_RDV_Notifications::send_client_confirmation( $booking )
+				: array( 'sent' => false, 'error' => null ); // pas de confirmation tant que le RDV n'est pas réellement confirmé.
+
+			Lion_RDV_DB::update_booking(
+				$booking_id,
+				array(
+					'client_email_sent'  => $email_result['sent'] ? 1 : 0,
+					'client_email_error' => $email_result['error'],
+				)
+			);
+
+			Lion_RDV_Notifications::send_internal_notification( $booking, $interfast_result, $email_result );
 
 			if ( ! $interfast_result['success'] ) {
 				return new WP_REST_Response(
@@ -242,12 +254,12 @@ class Lion_RDV_Rest_Controller {
 				);
 			}
 
-			Lion_RDV_Notifications::send_client_confirmation( $booking );
-
 			return new WP_REST_Response(
 				array(
 					'success' => true,
-					'message' => __( 'Votre rendez-vous est confirmé ! Un email récapitulatif vous a été envoyé.', 'lion-rdv-booking' ),
+					'message' => $email_result['sent']
+						? __( 'Votre rendez-vous est confirmé ! Un email récapitulatif vous a été envoyé.', 'lion-rdv-booking' )
+						: __( 'Votre rendez-vous est confirmé ! (L\'email récapitulatif n\'a pas pu être envoyé, mais votre RDV est bien enregistré.)', 'lion-rdv-booking' ),
 				),
 				200
 			);

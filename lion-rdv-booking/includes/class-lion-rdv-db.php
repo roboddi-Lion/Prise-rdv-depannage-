@@ -40,6 +40,8 @@ class Lion_RDV_DB {
 			status VARCHAR(20) NOT NULL DEFAULT 'pending',
 			interfast_event_id VARCHAR(100) NULL,
 			interfast_error TEXT NULL,
+			client_email_sent TINYINT(1) NOT NULL DEFAULT 0,
+			client_email_error TEXT NULL,
 			ip_address VARCHAR(45) NULL,
 			PRIMARY KEY  (id),
 			KEY slot_start (slot_start),

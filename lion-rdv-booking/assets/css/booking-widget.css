@@ -1,16 +1,28 @@
+/**
+ * ==========================================================================
+ * PERSONNALISATION — à adapter à la charte graphique de Lion Rénovation
+ * ==========================================================================
+ * Changez uniquement les valeurs ci-dessous pour recolorer tout le widget :
+ * --lion-rdv-primary      : couleur d'accent (boutons, liens, sélection)
+ * --lion-rdv-primary-dark : même couleur, plus foncée (survol des boutons)
+ * Le reste (police, tailles) hérite automatiquement du thème du site.
+ * ==========================================================================
+ */
 .lion-rdv-widget {
 	--lion-rdv-primary: #c0272d;
 	--lion-rdv-primary-dark: #98181d;
-	--lion-rdv-text: #1f2328;
+	--lion-rdv-text: inherit;
 	--lion-rdv-muted: #6b7280;
 	--lion-rdv-border: #e2e2e2;
-	--lion-rdv-bg: #ffffff;
-	--lion-rdv-bg-soft: #f7f7f8;
-	--lion-rdv-radius: 10px;
+	--lion-rdv-bg: transparent;
+	--lion-rdv-bg-soft: rgba(0, 0, 0, 0.03);
+	--lion-rdv-radius: 8px;
 
 	max-width: 640px;
 	margin: 0 auto;
 	font-family: inherit;
+	font-size: 1rem;
+	line-height: 1.5;
 	color: var(--lion-rdv-text);
 	box-sizing: border-box;
 }
@@ -24,14 +36,17 @@
 .lion-rdv-widget h2,
 .lion-rdv-widget h3 {
 	margin: 0 0 1rem;
-	font-size: 1.25rem;
+	font-size: 1.15em;
+	font-family: inherit;
+	font-weight: 600;
+	color: inherit;
 }
 
 .lion-rdv-step {
-	background: var(--lion-rdv-bg);
-	border: 1px solid var(--lion-rdv-border);
-	border-radius: var(--lion-rdv-radius);
-	padding: 1.5rem;
+	/* Pas de fond ni de bordure par défaut : le widget se fond dans la mise
+	   en page du thème plutôt que de s'afficher comme une boîte à part.
+	   Ajoutez background/border ici si vous préférez un encart visible. */
+	padding: 0;
 }
 
 .lion-rdv-service-grid {

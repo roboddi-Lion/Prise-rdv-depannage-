@@ -31,11 +31,12 @@ $status_labels = array(
 				<th><?php esc_html_e( 'Adresse', 'lion-rdv-booking' ); ?></th>
 				<th><?php esc_html_e( 'Statut', 'lion-rdv-booking' ); ?></th>
 				<th><?php esc_html_e( 'InterFast', 'lion-rdv-booking' ); ?></th>
+				<th><?php esc_html_e( 'Email client', 'lion-rdv-booking' ); ?></th>
 			</tr>
 		</thead>
 		<tbody>
 		<?php if ( empty( $bookings ) ) : ?>
-			<tr><td colspan="8"><?php esc_html_e( 'Aucune réservation pour le moment.', 'lion-rdv-booking' ); ?></td></tr>
+			<tr><td colspan="9"><?php esc_html_e( 'Aucune réservation pour le moment.', 'lion-rdv-booking' ); ?></td></tr>
 		<?php endif; ?>
 		<?php foreach ( $bookings as $booking ) : ?>
 			<tr>
@@ -56,6 +57,15 @@ $status_labels = array(
 						#<?php echo esc_html( $booking->interfast_event_id ); ?>
 					<?php elseif ( $booking->interfast_error ) : ?>
 						<span title="<?php echo esc_attr( $booking->interfast_error ); ?>" style="color:#c62828;">⚠ <?php esc_html_e( 'voir erreur', 'lion-rdv-booking' ); ?></span>
+					<?php endif; ?>
+				</td>
+				<td>
+					<?php if ( ! empty( $booking->client_email_sent ) ) : ?>
+						<span style="color:#1a7f37;">✓ <?php esc_html_e( 'envoyé', 'lion-rdv-booking' ); ?></span>
+					<?php elseif ( ! empty( $booking->client_email_error ) ) : ?>
+						<span title="<?php echo esc_attr( $booking->client_email_error ); ?>" style="color:#c62828;">⚠ <?php esc_html_e( 'échec (voir erreur)', 'lion-rdv-booking' ); ?></span>
+					<?php else : ?>
+						<span style="color:#996800;">–</span>
 					<?php endif; ?>
 				</td>
 			</tr>

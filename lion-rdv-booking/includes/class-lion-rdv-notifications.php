@@ -5,9 +5,35 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Emails de confirmation (client) et de notification interne (Lion Rénovation).
+ *
+ * ⚠️ wp_mail() utilise par défaut la fonction PHP mail() du serveur, souvent
+ * bloquée ou fortement filtrée par les hébergeurs mutualisés (aucun MTA
+ * configuré, ou emails partant sans SPF/DKIM valides et donc rejetés côté
+ * destinataire). Si les emails de confirmation n'arrivent pas alors que
+ * cette classe ne journalise aucune erreur ci-dessous, c'est le signe le
+ * plus probable : installez un plugin SMTP (ex. "WP Mail SMTP") relié à un
+ * vrai service d'envoi (Brevo, Mailgun, Gmail...) plutôt que mail() natif.
  */
 class Lion_RDV_Notifications {
 
+	private static $last_mail_error = null;
+
+	public static function init() {
+		add_action( 'wp_mail_failed', array( __CLASS__, 'capture_mail_error' ) );
+		add_filter( 'wp_mail_from_name', array( __CLASS__, 'filter_mail_from_name' ) );
+	}
+
+	public static function capture_mail_error( WP_Error $error ) {
+		self::$last_mail_error = $error->get_error_message();
+	}
+
+	public static function filter_mail_from_name( $name ) {
+		return 'wordpress' === strtolower( (string) $name ) ? 'Lion Rénovation' : $name;
+	}
+
+	/**
+	 * @return array{sent:bool,error:?string}
+	 */
 	public static function send_client_confirmation( array $booking ) {
 		$services      = Lion_RDV_Settings::get_settings()['services'];
 		$service_label = $services[ $booking['service_type'] ]['label'] ?? $booking['service_type'];
@@ -31,10 +57,33 @@ class Lion_RDV_Notifications {
 			$booking['address'] . ', ' . $booking['postal_code'] . ' ' . $booking['city']
 		);
 
-		wp_mail( $booking['email'], $subject, $message );
+		self::$last_mail_error = null;
+		$sent                  = wp_mail( $booking['email'], $subject, $message );
+
+		if ( ! $sent ) {
+			$error = self::$last_mail_error ?: __( 'wp_mail() a échoué sans détail (aucun serveur d\'envoi mail configuré sur l\'hébergement ?).', 'lion-rdv-booking' );
+			error_log( sprintf( '[Lion RDV] Échec envoi email de confirmation à %s : %s', $booking['email'], $error ) );
+
+			return array(
+				'sent'  => false,
+				'error' => $error,
+			);
+		}
+
+		return array(
+			'sent'  => true,
+			'error' => null,
+		);
 	}
 
-	public static function send_internal_notification( array $booking, $interfast_result ) {
+	/**
+	 * ⚠️ Cette notification utilise elle-même wp_mail() : si l'envoi de mail
+	 * est cassé sur l'hébergement (voir note en haut de fichier), ni le
+	 * client ni vous ne recevrez d'email. Le statut d'envoi est donc
+	 * toujours consultable dans Réglages > Prise de RDV Lion > Voir les
+	 * réservations récentes, indépendamment des emails.
+	 */
+	public static function send_internal_notification( array $booking, $interfast_result, $email_result = array() ) {
 		$settings = Lion_RDV_Settings::get_settings();
 		$to       = $settings['notification_email'];
 
@@ -67,6 +116,14 @@ class Lion_RDV_Notifications {
 
 		if ( ! $interfast_result['success'] ) {
 			$lines[] = sprintf( '%s: %s', __( 'Erreur InterFast', 'lion-rdv-booking' ), $interfast_result['error'] );
+		}
+
+		if ( isset( $email_result['sent'] ) && ! $email_result['sent'] ) {
+			$lines[] = sprintf(
+				'%s: %s',
+				__( 'Email client', 'lion-rdv-booking' ),
+				__( 'ÉCHEC d\'envoi - pensez à contacter le client par téléphone', 'lion-rdv-booking' ) . ( $email_result['error'] ? ' (' . $email_result['error'] . ')' : '' )
+			);
 		}
 
 		wp_mail( $to, $subject, implode( "\n", $lines ) );

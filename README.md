@@ -111,6 +111,27 @@ dès que vous avez plusieurs techniciens.
    **Réglages > Prise de RDV Lion > Voir les réservations récentes** pour
    suivi manuel.
 
+## Email de confirmation qui n'arrive pas
+
+WordPress envoie ses emails via `wp_mail()`, qui utilise par défaut la
+fonction PHP `mail()` du serveur. Sur la majorité des hébergements
+mutualisés modernes, cette fonction est soit désactivée, soit non
+configurée (aucun logiciel d'envoi de mail installé), soit les emails
+partent bien mais sont rejetés par le destinataire faute d'enregistrements
+SPF/DKIM valides pour le domaine d'envoi. **C'est la cause la plus probable
+si les confirmations n'arrivent pas.**
+
+Pour diagnostiquer : **Réglages > Prise de RDV Lion > Voir les réservations
+récentes**, colonne **« Email client »** — indique si l'envoi a réussi, et
+en cas d'échec, survolez l'icône ⚠ pour voir le message d'erreur exact
+(WordPress le fournit rarement en détail, mais c'est un indice).
+
+**Solution recommandée** : installez un plugin SMTP (ex. **WP Mail SMTP**,
+gratuit) et connectez-le à un vrai service d'envoi transactionnel (Brevo,
+Mailgun, Amazon SES, ou même un compte Gmail/Outlook en dépannage). Ce
+plugin fonctionne automatiquement avec `wp_mail()` sans modification du
+code de ce plugin.
+
 ## Anti-spam
 
 Le formulaire de réservation étant public, il inclut un champ piège
