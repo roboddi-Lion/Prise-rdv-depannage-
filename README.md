@@ -21,43 +21,37 @@ de l'agenda **InterFast**.
 5. Ajoutez le shortcode `[lion_rdv_booking]` sur la page « Prise de rendez-vous »
    de votre site.
 
-## ⚠️ Point à vérifier avant mise en production : l'intégration InterFast
+## Intégration InterFast
 
 Confirmé via `https://developers.inter-fast.fr/` (référence OpenAPI) :
 
 - Serveur API : `https://app.inter-fast.fr` (les chemins incluent déjà `/v1`,
   pas de préfixe `/api`)
 - Authentification par en-tête `X-API-KEY`
-- `GET /v1/events` : vue unifiée du planning, sert à calculer les créneaux libres
-- `POST /v1/intervention` : création d'une intervention
+- `GET /v1/events` : vue unifiée du planning (interventions, RDV, absences,
+  tâches), sert à calculer les créneaux libres
+- `POST /v1/client/particular` : création du client CRM associé à la
+  réservation (InterFast référence les interventions à un client existant,
+  pas à des coordonnées en texte libre)
+- `POST /v1/intervention` : création de l'intervention (`clientId` +
+  `addressId` obtenus à l'étape précédente)
 
 **Important** : l'accès à l'API InterFast est réservé aux comptes avec
 l'abonnement **Business**.
 
-La doc n'a listé que les chemins d'endpoints, pas encore le détail des
-paramètres/schémas (accès direct à developers.inter-fast.fr bloqué depuis
-l'environnement de développement). Avant la mise en production, **ouvrez ces
-deux endpoints dans la doc et confirmez** (puis ajustez si besoin
-`lion-rdv-booking/includes/class-lion-rdv-interfast-client.php`, zones
-clairement commentées) :
+**Limite connue à améliorer** : chaque réservation en ligne crée un nouveau
+client dans le CRM InterFast, même si le client existe déjà (pas de
+recherche/déduplication préalable — l'endpoint `GET /v1/client/search`
+existe mais son schéma exact n'a pas été vérifié). Si les doublons
+deviennent gênants, complétez `create_particular_client()` dans
+`lion-rdv-booking/includes/class-lion-rdv-interfast-client.php` pour
+rechercher un client existant (par email/téléphone) avant d'en créer un
+nouveau.
 
-- `GET /v1/events` : noms exacts des paramètres de filtrage par date, et
-  forme de la réponse (`data`, `items`, tableau brut…)
-- `POST /v1/intervention` : schéma exact du corps attendu — en particulier,
-  le client est-il référencé via un `client_id` existant (module CRM séparé
-  visible dans la doc), ou peut-il être envoyé en objet inline comme
-  actuellement dans le code ? Si un `client_id` est requis, il faudra ajouter
-  un appel préalable de recherche/création du client dans le module CRM.
-
-Le bouton **« Tester la connexion InterFast »** dans les réglages du plugin
-permet de valider rapidement ces ajustements sans avoir à modifier le code
-du widget public.
-
-Si votre besoin est plutôt de filtrer les disponibilités sur un technicien
-ou une équipe précise, renseignez son identifiant dans le champ **« ID
-ressource / technicien »** des réglages (transmis tel quel dans les appels
-API — le nom exact du paramètre peut aussi nécessiter un ajustement selon la
-doc InterFast).
+Pour filtrer les disponibilités sur un technicien précis (et lui assigner
+automatiquement les nouvelles interventions), renseignez son identifiant
+numérique InterFast dans le champ **« ID technicien InterFast »** des
+réglages.
 
 ## Fonctionnement
 

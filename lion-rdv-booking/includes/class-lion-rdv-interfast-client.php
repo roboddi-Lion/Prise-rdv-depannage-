@@ -4,25 +4,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Client HTTP pour l'API InterFast (module Opérations / Événements-Interventions).
+ * Client HTTP pour l'API InterFast (Événements, Interventions, Clients CRM).
  *
  * Confirmé via https://developers.inter-fast.fr/ (référence OpenAPI) :
  * - Serveur : https://app.inter-fast.fr (les chemins incluent déjà /v1)
  * - Auth par en-tête X-API-KEY
- * - GET  /v1/events        → vue unifiée du planning (sert à calculer les créneaux libres)
- * - POST /v1/intervention  → création d'une intervention
+ * - GET  /v1/events            → vue unifiée du planning (sert à calculer les créneaux libres)
+ * - POST /v1/client/particular → création du client CRM associé à la réservation
+ * - POST /v1/intervention      → création de l'intervention (référence clientId/addressId)
  *
- * ⚠️ ENCORE À CONFIRMER ⚠️
- * La doc de référence n'a listé que les chemins d'endpoints, pas le détail
- * des paramètres/schémas (accès direct à developers.inter-fast.fr bloqué
- * depuis cet environnement). Restent à vérifier :
- * - les noms exacts des paramètres de filtrage par date sur GET /v1/events
- * - le schéma exact du corps attendu par POST /v1/intervention (en
- *   particulier : réfère-t-on le client via `client_id` — vu la présence
- *   d'un module CRM/Clients séparé — ou peut-on l'envoyer en objet inline
- *   comme fait ci-dessous ?)
- * Ajustez `get_events()` et `build_event_payload()` en conséquence. Le
- * bouton "Tester la connexion" des réglages permet de valider rapidement.
+ * ⚠️ Limite connue : chaque réservation crée un nouveau client CRM, sans
+ * recherche préalable d'un client existant (dédoublonnage non implémenté —
+ * voir le commentaire sur `create_particular_client()`).
  */
 class Lion_RDV_Interfast_Client {
 
@@ -108,13 +101,33 @@ class Lion_RDV_Interfast_Client {
 	}
 
 	/**
-	 * Crée l'intervention/le rendez-vous dans InterFast.
+	 * Crée l'intervention dans InterFast pour la réservation du client.
+	 *
+	 * InterFast référence les interventions à un client du CRM (`clientId` /
+	 * `addressId`) plutôt que d'accepter des coordonnées en texte libre : on
+	 * crée donc d'abord un client "particulier" avant de créer l'intervention.
+	 *
+	 * ⚠️ Chaque réservation crée un nouveau client CRM, même pour un client
+	 * déjà existant (recherche/déduplication non implémentée — l'endpoint
+	 * `GET /v1/client/search` existe mais son schéma n'a pas été vérifié).
+	 * À améliorer si les doublons deviennent gênants.
 	 *
 	 * @param array $booking Voir Lion_RDV_Rest_Controller::handle_book_slot() pour la forme exacte.
 	 * @return array{success:bool,event_id:?string,error:?string,raw:mixed}
 	 */
 	public function create_event( array $booking ) {
-		$payload = $this->build_event_payload( $booking );
+		$client_result = $this->create_particular_client( $booking );
+
+		if ( ! $client_result['success'] ) {
+			return array(
+				'success'  => false,
+				'event_id' => null,
+				'error'    => $client_result['error'],
+				'raw'      => $client_result['raw'],
+			);
+		}
+
+		$payload = $this->build_intervention_payload( $booking, $client_result['client_id'], $client_result['address_id'] );
 
 		$response = $this->request( 'POST', '/v1/intervention', array(), $payload );
 
@@ -128,7 +141,7 @@ class Lion_RDV_Interfast_Client {
 		}
 
 		$data     = $response['data'];
-		$event_id = $data['id'] ?? $data['event_id'] ?? $data['data']['id'] ?? null;
+		$event_id = $data['id'] ?? $data['data']['id'] ?? null;
 
 		return array(
 			'success'  => true,
@@ -139,6 +152,69 @@ class Lion_RDV_Interfast_Client {
 	}
 
 	/**
+	 * Crée le client "particulier" associé à la réservation.
+	 * Confirmé via POST /v1/client/particular dans developers.inter-fast.fr.
+	 *
+	 * @return array{success:bool,client_id:?int,address_id:?int,error:?string,raw:mixed}
+	 */
+	private function create_particular_client( array $booking ) {
+		$payload = array(
+			'category'    => 'client',
+			'firstName'   => $booking['first_name'],
+			'lastName'    => $booking['last_name'],
+			'email'       => $booking['email'],
+			'phoneNumber' => $this->normalize_french_phone( $booking['phone'] ),
+			'address'     => $booking['address'],
+			'zipCode'     => $booking['postal_code'],
+			'city'        => $booking['city'],
+			'addressCountry' => 'FR',
+			'commentary'  => __( 'Client créé automatiquement via la prise de RDV en ligne.', 'lion-rdv-booking' ),
+		);
+
+		$payload = apply_filters( 'lion_rdv_interfast_client_payload', $payload, $booking );
+
+		$response = $this->request( 'POST', '/v1/client/particular', array(), $payload );
+
+		if ( ! $response['success'] ) {
+			return array(
+				'success'    => false,
+				'client_id'  => null,
+				'address_id' => null,
+				'error'      => $response['error'],
+				'raw'        => $response['data'] ?? null,
+			);
+		}
+
+		$data = $response['data'];
+
+		return array(
+			'success'    => true,
+			'client_id'  => isset( $data['id'] ) ? (int) $data['id'] : null,
+			'address_id' => isset( $data['primaryAddressId'] ) ? (int) $data['primaryAddressId'] : null,
+			'error'      => null,
+			'raw'        => $data,
+		);
+	}
+
+	/**
+	 * Convertit un numéro français en format international basique
+	 * (l'API InterFast attend le format international, ex : +33612345678).
+	 */
+	private function normalize_french_phone( $phone ) {
+		$digits = preg_replace( '/[^0-9+]/', '', $phone );
+
+		if ( 0 === strpos( $digits, '+' ) ) {
+			return $digits;
+		}
+
+		if ( 0 === strpos( $digits, '0' ) && 10 === strlen( $digits ) ) {
+			return '+33' . substr( $digits, 1 );
+		}
+
+		return $digits;
+	}
+
+	/**
 	 * Vérification de connexion utilisée par le bouton "Tester la connexion" des réglages.
 	 */
 	public function test_connection() {
@@ -146,7 +222,11 @@ class Lion_RDV_Interfast_Client {
 		return $this->get_events( $now, $now->modify( '+1 day' ) );
 	}
 
-	private function build_event_payload( array $booking ) {
+	/**
+	 * Construit le corps de POST /v1/intervention.
+	 * Confirmé via developers.inter-fast.fr (CreateInterventionDto).
+	 */
+	private function build_intervention_payload( array $booking, $client_id, $address_id ) {
 		$title = sprintf(
 			'%s - %s %s',
 			'entretien' === $booking['service_type'] ? 'Entretien' : 'Dépannage',
@@ -155,24 +235,21 @@ class Lion_RDV_Interfast_Client {
 		);
 
 		$payload = array(
-			'title'       => $title,
-			'type'        => $booking['service_type'],
-			'date_start'  => $booking['start']->format( DateTimeInterface::ATOM ),
-			'date_end'    => $booking['end']->format( DateTimeInterface::ATOM ),
-			'description' => $booking['message'],
-			'client'      => array(
-				'first_name'  => $booking['first_name'],
-				'last_name'   => $booking['last_name'],
-				'phone'       => $booking['phone'],
-				'email'       => $booking['email'],
-				'address'     => $booking['address'],
-				'postal_code' => $booking['postal_code'],
-				'city'        => $booking['city'],
-			),
+			'clientId'         => $client_id,
+			'title'            => $title,
+			'description'      => $booking['message'],
+			'start'            => $booking['start']->format( DateTimeInterface::ATOM ),
+			'end'              => $booking['end']->format( DateTimeInterface::ATOM ),
+			// Le dépannage est traité en priorité "high", l'entretien en "normal".
+			'importanceLevel'  => 'depannage' === $booking['service_type'] ? 'high' : 'normal',
 		);
 
+		if ( $address_id ) {
+			$payload['addressId'] = $address_id;
+		}
+
 		if ( ! empty( $this->resource_id ) ) {
-			$payload['resource_id'] = $this->resource_id;
+			$payload['primaryTechnicianId'] = (int) $this->resource_id;
 		}
 
 		return apply_filters( 'lion_rdv_interfast_event_payload', $payload, $booking );

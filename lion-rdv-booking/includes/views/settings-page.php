@@ -74,10 +74,10 @@ $day_labels = array(
 				</td>
 			</tr>
 			<tr>
-				<th scope="row"><label for="interfast_resource_id"><?php esc_html_e( 'ID ressource / technicien (optionnel)', 'lion-rdv-booking' ); ?></label></th>
+				<th scope="row"><label for="interfast_resource_id"><?php esc_html_e( 'ID technicien InterFast (optionnel)', 'lion-rdv-booking' ); ?></label></th>
 				<td>
 					<input type="text" id="interfast_resource_id" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[interfast_resource_id]" value="<?php echo esc_attr( $settings['interfast_resource_id'] ); ?>" class="regular-text" />
-					<p class="description"><?php esc_html_e( 'Laissez vide pour vérifier la disponibilité sur l\'ensemble du planning.', 'lion-rdv-booking' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Identifiant numérique d\'un utilisateur InterFast (technicien). Laissez vide pour vérifier la disponibilité sur l\'ensemble du planning ; renseigné, les créneaux seront limités à ce technicien et les nouvelles interventions lui seront assignées.', 'lion-rdv-booking' ); ?></p>
 				</td>
 			</tr>
 		</table>
