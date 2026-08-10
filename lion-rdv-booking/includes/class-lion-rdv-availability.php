@@ -45,7 +45,9 @@ class Lion_RDV_Availability {
 		$range_start = $now->setTime( 0, 0, 0 );
 		$range_end   = $range_start->modify( "+{$horizon_days} days" );
 
-		$events_result = $this->client->get_events( $range_start, $range_end, $technician_ids );
+		// Interroge un jour de plus en amont (voir la note dans is_slot_still_free())
+		// pour ne pas manquer une intervention commencée la veille et qui déborderait tard.
+		$events_result = $this->client->get_events( $range_start->modify( '-1 day' ), $range_end, $technician_ids );
 
 		if ( ! $events_result['success'] ) {
 			return array(
@@ -133,6 +135,15 @@ class Lion_RDV_Availability {
 	 * de l'événement InterFast (limite le risque de double réservation), et
 	 * détermine quel technicien libre lui assigner (mode multi-techniciens).
 	 *
+	 * ⚠️ Interroge toute la journée du créneau (minuit à minuit), pas juste
+	 * une fenêtre étroite autour du créneau : le comportement exact du
+	 * filtre start/end de GET /v1/events n'étant pas documenté (renvoie-t-il
+	 * les événements qui CHEVAUCHENT la période, ou seulement ceux qui
+	 * commencent dedans ?), une intervention déjà en cours mais commencée
+	 * avant une fenêtre trop étroite pourrait ne pas remonter et laisser
+	 * passer un double-réservation. Interroger toute la journée élimine ce
+	 * risque quelle que soit la sémantique réelle de l'API.
+	 *
 	 * @param string $service_type Clé du service réservé, pour appliquer sa propre liste de techniciens.
 	 * @return array{free:bool,error:?string,technician_id:?int}
 	 */
@@ -140,7 +151,10 @@ class Lion_RDV_Availability {
 		$service        = $this->client->get_service( $service_type );
 		$technician_ids = $service['technician_ids'] ?? array();
 
-		$result = $this->client->get_events( $start->modify( '-1 minute' ), $end->modify( '+1 minute' ), $technician_ids );
+		$day_start = $start->setTime( 0, 0, 0 );
+		$day_end   = $day_start->modify( '+1 day' );
+
+		$result = $this->client->get_events( $day_start, $day_end, $technician_ids );
 
 		if ( ! $result['success'] ) {
 			return array(
