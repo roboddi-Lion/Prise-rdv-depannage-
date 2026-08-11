@@ -114,7 +114,12 @@ class Lion_RDV_Availability {
 				if ( ! empty( $day_slots ) ) {
 					$days[] = array(
 						'date'  => $cursor->format( 'Y-m-d' ),
-						'label' => date_i18n( 'l j F', $cursor->getTimestamp() ),
+						// wp_date() (pas date_i18n) : date_i18n() attend un timestamp
+						// "heure locale déguisée en UTC" et réapplique le décalage du
+						// fuseau horaire du site, ce qui décale l'affichage (et peut
+						// faire apparaître un mauvais jour de semaine dans le libellé)
+						// quand on lui passe un vrai timestamp UTC comme ->getTimestamp().
+						'label' => wp_date( 'l j F', $cursor->getTimestamp(), $tz ),
 						'slots' => $day_slots,
 					);
 				}

@@ -52,7 +52,7 @@ class Lion_RDV_Notifications {
 			),
 			$booking['first_name'],
 			$service_label,
-			date_i18n( 'l j F Y', $booking['start']->getTimestamp() ),
+			wp_date( 'l j F Y', $booking['start']->getTimestamp(), $booking['start']->getTimezone() ),
 			$booking['start']->format( 'H:i' ) . ' - ' . $booking['end']->format( 'H:i' ),
 			$booking['address'] . ', ' . $booking['postal_code'] . ' ' . $booking['city']
 		);
@@ -105,7 +105,7 @@ class Lion_RDV_Notifications {
 		$lines = array(
 			sprintf( '%s: %s', __( 'Service', 'lion-rdv-booking' ), $service_label ),
 			sprintf( '%s: %s', __( 'Statut', 'lion-rdv-booking' ), $status_label ),
-			sprintf( '%s: %s', __( 'Date', 'lion-rdv-booking' ), date_i18n( 'l j F Y', $booking['start']->getTimestamp() ) ),
+			sprintf( '%s: %s', __( 'Date', 'lion-rdv-booking' ), wp_date( 'l j F Y', $booking['start']->getTimestamp(), $booking['start']->getTimezone() ) ),
 			sprintf( '%s: %s - %s', __( 'Heure', 'lion-rdv-booking' ), $booking['start']->format( 'H:i' ), $booking['end']->format( 'H:i' ) ),
 			sprintf( '%s: %s %s', __( 'Client', 'lion-rdv-booking' ), $booking['first_name'], $booking['last_name'] ),
 			sprintf( '%s: %s', __( 'Téléphone', 'lion-rdv-booking' ), $booking['phone'] ),
