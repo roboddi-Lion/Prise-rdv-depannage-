@@ -67,6 +67,7 @@ class Lion_RDV_Settings {
 	public static function default_services() {
 		return array(
 			'entretien_clim'            => array(
+				'enabled'          => true,
 				'label'            => __( 'Entretien climatisation', 'lion-rdv-booking' ),
 				'description'      => __( 'Entretien de climatisation', 'lion-rdv-booking' ),
 				'duration_minutes' => 90,
@@ -77,6 +78,7 @@ class Lion_RDV_Settings {
 				'technician_ids'   => array(),
 			),
 			'entretien_pac'             => array(
+				'enabled'          => true,
 				'label'            => __( 'Entretien PAC', 'lion-rdv-booking' ),
 				'description'      => __( 'Entretien de pompe à chaleur', 'lion-rdv-booking' ),
 				'duration_minutes' => 90,
@@ -87,6 +89,7 @@ class Lion_RDV_Settings {
 				'technician_ids'   => array(),
 			),
 			'entretien_chaudiere_gaz'   => array(
+				'enabled'          => true,
 				'label'            => __( 'Entretien chaudière gaz', 'lion-rdv-booking' ),
 				'description'      => __( 'Entretien annuel de chaudière à gaz', 'lion-rdv-booking' ),
 				'duration_minutes' => 90,
@@ -97,6 +100,7 @@ class Lion_RDV_Settings {
 				'technician_ids'   => array(),
 			),
 			'entretien_chaudiere_fioul' => array(
+				'enabled'          => true,
 				'label'            => __( 'Entretien chaudière fioul', 'lion-rdv-booking' ),
 				'description'      => __( 'Entretien annuel de chaudière à fioul', 'lion-rdv-booking' ),
 				'duration_minutes' => 90,
@@ -107,6 +111,7 @@ class Lion_RDV_Settings {
 				'technician_ids'   => array(),
 			),
 			'depannage_clim_pac'        => array(
+				'enabled'          => true,
 				'label'            => __( 'Dépannage climatisation / PAC', 'lion-rdv-booking' ),
 				'description'      => __( 'Panne de climatisation ou de pompe à chaleur', 'lion-rdv-booking' ),
 				'duration_minutes' => 60,
@@ -118,6 +123,7 @@ class Lion_RDV_Settings {
 				'technician_ids'   => array(),
 			),
 			'depannage_chaudiere'       => array(
+				'enabled'          => true,
 				'label'            => __( 'Dépannage chaudière', 'lion-rdv-booking' ),
 				'description'      => __( 'Panne de chaudière', 'lion-rdv-booking' ),
 				'duration_minutes' => 60,
@@ -128,6 +134,7 @@ class Lion_RDV_Settings {
 				'technician_ids'   => array(),
 			),
 			'depannage_plomberie'       => array(
+				'enabled'          => true,
 				'label'            => __( 'Dépannage plomberie', 'lion-rdv-booking' ),
 				'description'      => __( 'Panne de plomberie', 'lion-rdv-booking' ),
 				'duration_minutes' => 60,
@@ -229,6 +236,7 @@ class Lion_RDV_Settings {
 			$service_input = $input['services'][ $key ] ?? array();
 
 			$clean['services'][ $key ] = array(
+				'enabled'          => ! empty( $service_input['enabled'] ),
 				'label'            => isset( $service_input['label'] ) && '' !== trim( $service_input['label'] ) ? sanitize_text_field( $service_input['label'] ) : $default_service['label'],
 				'description'      => isset( $service_input['description'] ) ? sanitize_text_field( $service_input['description'] ) : $default_service['description'],
 				'duration_minutes' => max( 15, (int) ( $service_input['duration_minutes'] ?? $default_service['duration_minutes'] ) ),

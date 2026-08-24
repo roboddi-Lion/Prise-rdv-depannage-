@@ -93,6 +93,7 @@ $day_labels = array(
 
 		<h2><?php esc_html_e( 'Types de rendez-vous proposés', 'lion-rdv-booking' ); ?></h2>
 		<p class="description">
+			<?php esc_html_e( 'Décochez « Actif » pour retirer un type de rendez-vous du widget public sans perdre sa configuration (durée, technicien, modèle de rapport...).', 'lion-rdv-booking' ); ?>
 			<?php esc_html_e( 'Chaque type de rendez-vous a son propre modèle de rapport InterFast (reportTypeId, obligatoire) et sa propre liste de techniciens. Cliquez sur « Tester la connexion » plus bas pour voir la liste de vos modèles disponibles et copier le bon ID.', 'lion-rdv-booking' ); ?>
 			<strong><?php esc_html_e( 'Techniciens : fortement recommandé dès que vous avez plusieurs techniciens.', 'lion-rdv-booking' ); ?></strong>
 			<?php esc_html_e( 'Un créneau n\'est proposé pour ce service que si AU MOINS UN des techniciens listés est libre, et celui qui est libre lui est automatiquement assigné. Laissé vide pour un service, le plugin vérifie le planning de toute l\'entreprise et considère un créneau occupé dès qu\'un seul technicien (même sans rapport avec ce service) a quelque chose de prévu — ce qui peut faire disparaître presque tous les créneaux si votre planning est chargé.', 'lion-rdv-booking' ); ?>
@@ -100,6 +101,7 @@ $day_labels = array(
 		<table class="widefat" style="margin-bottom:1.5em;">
 			<thead>
 				<tr>
+					<th><?php esc_html_e( 'Actif', 'lion-rdv-booking' ); ?></th>
 					<th><?php esc_html_e( 'Nom affiché', 'lion-rdv-booking' ); ?></th>
 					<th><?php esc_html_e( 'Description affichée', 'lion-rdv-booking' ); ?></th>
 					<th><?php esc_html_e( 'Durée (min)', 'lion-rdv-booking' ); ?></th>
@@ -112,6 +114,7 @@ $day_labels = array(
 			<tbody>
 			<?php foreach ( $settings['services'] as $service_key => $service ) : ?>
 				<tr>
+					<td><input type="checkbox" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[services][<?php echo esc_attr( $service_key ); ?>][enabled]" <?php checked( $service['enabled'] ); ?> /></td>
 					<td><input type="text" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[services][<?php echo esc_attr( $service_key ); ?>][label]" value="<?php echo esc_attr( $service['label'] ); ?>" class="regular-text" /></td>
 					<td><input type="text" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[services][<?php echo esc_attr( $service_key ); ?>][description]" value="<?php echo esc_attr( $service['description'] ); ?>" class="regular-text" /></td>
 					<td><input type="number" min="15" step="15" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[services][<?php echo esc_attr( $service_key ); ?>][duration_minutes]" value="<?php echo esc_attr( $service['duration_minutes'] ); ?>" class="small-text" /></td>

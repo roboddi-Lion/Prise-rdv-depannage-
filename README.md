@@ -18,10 +18,11 @@ de l'agenda **InterFast**.
    - le tableau **« Types de rendez-vous proposés »** : sept lignes
      préconfigurées (Entretien climatisation, Entretien PAC, Entretien
      chaudière gaz, Entretien chaudière fioul, Dépannage climatisation/PAC,
-     Dépannage chaudière, Dépannage plomberie), chacune avec son nom affiché,
-     sa description, sa durée, son préavis minimum, sa priorité, son **ID de
-     modèle de rapport** (`reportTypeId`, obligatoire) et ses **ID
-     techniciens** (voir ci-dessous)
+     Dépannage chaudière, Dépannage plomberie), chacune avec une case
+     **« Actif »** (décochez pour retirer ce service du widget public sans
+     perdre sa configuration), son nom affiché, sa description, sa durée,
+     son préavis minimum, sa priorité, son **ID de modèle de rapport**
+     (`reportTypeId`, obligatoire) et ses **ID techniciens** (voir ci-dessous)
 4. Cliquez sur **« Tester la connexion InterFast »** : la liste complète de
    vos modèles de rapport InterFast s'affiche, pour ajuster l'ID de modèle
    d'une ligne si la valeur préremplie ne correspond pas à votre activité —

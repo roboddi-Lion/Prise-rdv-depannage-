@@ -30,6 +30,9 @@ class Lion_RDV_Shortcode {
 
 		$services = array();
 		foreach ( Lion_RDV_Settings::get_settings()['services'] as $key => $service ) {
+			if ( empty( $service['enabled'] ) ) {
+				continue;
+			}
 			$services[] = array(
 				'key'         => $key,
 				'label'       => $service['label'],

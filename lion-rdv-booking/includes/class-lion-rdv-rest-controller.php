@@ -26,7 +26,9 @@ class Lion_RDV_Rest_Controller {
 					'service' => array(
 						'required' => true,
 						'type'     => 'string',
-						'enum'     => array_keys( Lion_RDV_Settings::get_settings()['services'] ),
+						'enum'     => array_keys( array_filter( Lion_RDV_Settings::get_settings()['services'], static function ( $service ) {
+							return ! empty( $service['enabled'] );
+						} ) ),
 					),
 				),
 			)
@@ -92,7 +94,8 @@ class Lion_RDV_Rest_Controller {
 		$errors   = array();
 		$settings = Lion_RDV_Settings::get_settings();
 
-		$service_type = array_key_exists( $body['service'] ?? '', $settings['services'] ) ? $body['service'] : null;
+		$requested_service = $settings['services'][ $body['service'] ?? '' ] ?? null;
+		$service_type      = ! empty( $requested_service['enabled'] ) ? $body['service'] : null;
 		if ( ! $service_type ) {
 			$errors[] = __( 'Type d\'intervention invalide.', 'lion-rdv-booking' );
 		}
