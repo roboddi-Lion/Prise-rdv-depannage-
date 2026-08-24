@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Lion Rénovation - Prise de RDV Dépannage & Entretien
  * Description: Permet aux visiteurs du site de réserver eux-mêmes un créneau de dépannage ou d'entretien, synchronisé avec l'agenda InterFast.
- * Version: 1.0.0
+ * Version: 1.2.0
  * Author: Lion Rénovation
  * Text Domain: lion-rdv-booking
  * Requires at least: 5.9
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LION_RDV_VERSION', '1.1.0' );
+define( 'LION_RDV_VERSION', '1.2.0' );
 define( 'LION_RDV_PLUGIN_FILE', __FILE__ );
 define( 'LION_RDV_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'LION_RDV_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

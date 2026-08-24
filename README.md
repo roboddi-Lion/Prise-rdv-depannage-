@@ -144,6 +144,15 @@ adresse IP.
 
 ## Personnalisation visuelle
 
-Les couleurs du widget sont définies via des variables CSS en haut de
-`assets/css/booking-widget.css` (`--lion-rdv-primary`, etc.) : modifiez-les
-pour correspondre à la charte graphique de Lion Rénovation.
+Le style est calé sur la charte actuelle de **lion-renovation.fr** (bleu
+`#0d4995`, polices Outfit/Montserrat, rayon 8px, ombres teintées bleu,
+petite barre de marque ambre/terracotta/bleu/marine). Le widget est
+présenté comme un encart blanc arrondi avec ombre, sur le même modèle que
+le formulaire de contact existant du site (`.request-form`).
+
+Les couleurs sont définies via des variables CSS en haut de
+`assets/css/booking-widget.css` (`--lion-rdv-primary`, etc.) — ce sont les
+mêmes noms de variables que le plugin « Prise de RDV Devis » (agendas
+Google Calendar) : si la charte du site venait à changer, reportez les
+nouvelles valeurs dans les deux fichiers CSS pour que les deux widgets
+restent visuellement identiques.

@@ -50,6 +50,50 @@
 		container.insertBefore( msg, container.firstChild );
 	}
 
+	var PROGRESS_STEPS = [
+		{ key: 'service', label: function () { return i18n.stepService; } },
+		{ key: 'slots', label: function () { return i18n.stepSlot; } },
+		{ key: 'form', label: function () { return i18n.stepContact; } },
+	];
+
+	function renderProgress( activeKey ) {
+		var activeIndex = PROGRESS_STEPS.map( function ( s ) { return s.key; } ).indexOf( activeKey );
+		var wrap = el( 'div', { class: 'lion-rdv-progress' } );
+
+		PROGRESS_STEPS.forEach( function ( step, index ) {
+			var state = index < activeIndex ? 'is-done' : ( index === activeIndex ? 'is-active' : '' );
+			wrap.appendChild(
+				el( 'div', { class: 'lion-rdv-progress-step' + ( state ? ' ' + state : '' ) }, [
+					el( 'span', { class: 'lion-rdv-progress-dot', text: index < activeIndex ? '✓' : String( index + 1 ) } ),
+					el( 'span', { class: 'lion-rdv-progress-label', text: step.label() } ),
+				] )
+			);
+		} );
+
+		return wrap;
+	}
+
+	// Reprend la petite barre à 4 couleurs (ambre/terracotta/bleu/marine) que
+	// lion-renovation.fr affiche devant ses titres de section — une touche
+	// de marque directement empruntée au site plutôt qu'un motif générique.
+	function renderBrandBar() {
+		return el( 'div', { class: 'lion-rdv-brand-bar' }, [
+			el( 'span' ),
+			el( 'span' ),
+			el( 'span' ),
+			el( 'span' ),
+		] );
+	}
+
+	// Toutes les étapes (sauf l'écran final) partagent la même structure de
+	// base : la barre de marque, puis l'indicateur de progression.
+	function stepShell( activeKey ) {
+		var stepEl = el( 'div', { class: 'lion-rdv-step' } );
+		stepEl.appendChild( renderBrandBar() );
+		stepEl.appendChild( renderProgress( activeKey ) );
+		return stepEl;
+	}
+
 	function render() {
 		clear( root );
 		if ( 'service' === state.step ) {
@@ -64,7 +108,7 @@
 	}
 
 	function renderServiceStep() {
-		var stepEl = el( 'div', { class: 'lion-rdv-step' } );
+		var stepEl = stepShell( 'service' );
 		stepEl.appendChild( el( 'h2', { text: i18n.chooseService } ) );
 
 		var grid = el( 'div', { class: 'lion-rdv-service-grid' } );
@@ -101,9 +145,14 @@
 	}
 
 	function fetchSlots() {
-		var stepEl = el( 'div', { class: 'lion-rdv-step' } );
+		var stepEl = stepShell( 'slots' );
 		stepEl.appendChild( backButton( 'service' ) );
-		stepEl.appendChild( el( 'div', { class: 'lion-rdv-loading', text: i18n.loadingSlots } ) );
+		stepEl.appendChild(
+			el( 'div', { class: 'lion-rdv-loading' }, [
+				el( 'span', { class: 'lion-rdv-spinner' } ),
+				document.createTextNode( i18n.loadingSlots ),
+			] )
+		);
 		clear( root );
 		root.appendChild( stepEl );
 
@@ -149,7 +198,7 @@
 	}
 
 	function renderSlotsStep() {
-		var stepEl = el( 'div', { class: 'lion-rdv-step' } );
+		var stepEl = stepShell( 'slots' );
 		stepEl.appendChild( backButton( 'service' ) );
 
 		if ( ! state.days.length ) {
@@ -220,7 +269,7 @@
 	}
 
 	function renderFormStep() {
-		var stepEl = el( 'div', { class: 'lion-rdv-step' } );
+		var stepEl = stepShell( 'form' );
 		stepEl.appendChild( backButton( 'slots' ) );
 
 		stepEl.appendChild(
