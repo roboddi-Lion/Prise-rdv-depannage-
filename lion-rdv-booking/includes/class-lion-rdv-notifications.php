@@ -84,12 +84,23 @@ class Lion_RDV_Notifications {
 	 * réservations récentes, indépendamment des emails.
 	 */
 	public static function send_internal_notification( array $booking, $interfast_result, $email_result = array() ) {
-		$settings = Lion_RDV_Settings::get_settings();
-		$to       = $settings['notification_email'];
+		$settings     = Lion_RDV_Settings::get_settings();
+		$service_conf = $settings['services'][ $booking['service_type'] ] ?? array();
 
-		if ( empty( $to ) ) {
+		// Envoie à la fois à l'email global et à l'email spécifique du service
+		// (si renseigné et différent), pour ne jamais faire disparaître une
+		// notification déjà en place en ajoutant un destinataire dédié.
+		$recipients = array_unique(
+			array_filter(
+				array( $settings['notification_email'], $service_conf['notification_email'] ?? '' )
+			)
+		);
+
+		if ( empty( $recipients ) ) {
 			return;
 		}
+
+		$to = implode( ',', $recipients );
 
 		$service_label = $settings['services'][ $booking['service_type'] ]['label'] ?? $booking['service_type'];
 		$status_label  = $interfast_result['success']

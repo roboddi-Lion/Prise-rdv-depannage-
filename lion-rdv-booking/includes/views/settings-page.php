@@ -97,6 +97,7 @@ $day_labels = array(
 			<?php esc_html_e( 'Chaque type de rendez-vous a son propre modèle de rapport InterFast (reportTypeId, obligatoire) et sa propre liste de techniciens. Cliquez sur « Tester la connexion » plus bas pour voir la liste de vos modèles disponibles et copier le bon ID.', 'lion-rdv-booking' ); ?>
 			<strong><?php esc_html_e( 'Techniciens : fortement recommandé dès que vous avez plusieurs techniciens.', 'lion-rdv-booking' ); ?></strong>
 			<?php esc_html_e( 'Un créneau n\'est proposé pour ce service que si AU MOINS UN des techniciens listés est libre, et celui qui est libre lui est automatiquement assigné. Laissé vide pour un service, le plugin vérifie le planning de toute l\'entreprise et considère un créneau occupé dès qu\'un seul technicien (même sans rapport avec ce service) a quelque chose de prévu — ce qui peut faire disparaître presque tous les créneaux si votre planning est chargé.', 'lion-rdv-booking' ); ?>
+			<?php esc_html_e( 'Email de notification spécifique : laissez vide pour utiliser uniquement l\'email de notification interne général (ci-dessous). Si renseigné, les deux adresses reçoivent la notification pour ce service.', 'lion-rdv-booking' ); ?>
 		</p>
 		<table class="widefat" style="margin-bottom:1.5em;">
 			<thead>
@@ -109,6 +110,7 @@ $day_labels = array(
 					<th><?php esc_html_e( 'Priorité', 'lion-rdv-booking' ); ?></th>
 					<th><?php esc_html_e( 'ID de modèle de rapport (reportTypeId)', 'lion-rdv-booking' ); ?></th>
 					<th><?php esc_html_e( 'ID techniciens (séparés par virgules)', 'lion-rdv-booking' ); ?></th>
+					<th><?php esc_html_e( 'Email de notification spécifique (optionnel)', 'lion-rdv-booking' ); ?></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -127,6 +129,7 @@ $day_labels = array(
 					</td>
 					<td><input type="text" required name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[services][<?php echo esc_attr( $service_key ); ?>][report_type_id]" value="<?php echo esc_attr( $service['report_type_id'] ); ?>" class="regular-text" /></td>
 					<td><input type="text" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[services][<?php echo esc_attr( $service_key ); ?>][technician_ids]" value="<?php echo esc_attr( implode( ', ', $service['technician_ids'] ) ); ?>" class="regular-text" placeholder="12, 34, 56" /></td>
+					<td><input type="email" name="<?php echo esc_attr( Lion_RDV_Settings::OPTION_KEY ); ?>[services][<?php echo esc_attr( $service_key ); ?>][notification_email]" value="<?php echo esc_attr( $service['notification_email'] ); ?>" class="regular-text" placeholder="<?php echo esc_attr( $settings['notification_email'] ); ?>" /></td>
 				</tr>
 			<?php endforeach; ?>
 			</tbody>

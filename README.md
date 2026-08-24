@@ -22,7 +22,10 @@ de l'agenda **InterFast**.
      **« Actif »** (décochez pour retirer ce service du widget public sans
      perdre sa configuration), son nom affiché, sa description, sa durée,
      son préavis minimum, sa priorité, son **ID de modèle de rapport**
-     (`reportTypeId`, obligatoire) et ses **ID techniciens** (voir ci-dessous)
+     (`reportTypeId`, obligatoire), ses **ID techniciens** (voir ci-dessous)
+     et un **email de notification spécifique** optionnel — les 3 services
+     de dépannage sont préremplis avec `contact@lion-renovation.fr` en plus
+     de l'email de notification interne général
 4. Cliquez sur **« Tester la connexion InterFast »** : la liste complète de
    vos modèles de rapport InterFast s'affiche, pour ajuster l'ID de modèle
    d'une ligne si la valeur préremplie ne correspond pas à votre activité —
