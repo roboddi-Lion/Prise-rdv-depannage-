@@ -47,6 +47,9 @@ class Lion_RDV_Shortcode {
 				'restUrl'  => esc_url_raw( rest_url( 'lion-rdv/v1' ) ),
 				'services' => $services,
 				'i18n'    => array(
+					'stepService'     => __( 'Service', 'lion-rdv-booking' ),
+					'stepSlot'        => __( 'Créneau', 'lion-rdv-booking' ),
+					'stepContact'     => __( 'Coordonnées', 'lion-rdv-booking' ),
 					'chooseService'   => __( 'Quel type de rendez-vous souhaitez-vous prendre ?', 'lion-rdv-booking' ),
 					'loadingSlots'    => __( 'Chargement des créneaux disponibles…', 'lion-rdv-booking' ),
 					'noSlots'         => __( 'Aucun créneau disponible pour le moment. Merci de nous contacter directement.', 'lion-rdv-booking' ),

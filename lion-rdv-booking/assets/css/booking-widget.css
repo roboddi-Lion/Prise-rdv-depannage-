@@ -1,30 +1,50 @@
 /**
  * ==========================================================================
- * PERSONNALISATION — à adapter à la charte graphique de Lion Rénovation
+ * CHARTE GRAPHIQUE — calée sur lion-renovation.fr
  * ==========================================================================
- * Changez uniquement les valeurs ci-dessous pour recolorer tout le widget :
- * --lion-rdv-primary      : couleur d'accent (boutons, liens, sélection)
- * --lion-rdv-primary-dark : même couleur, plus foncée (survol des boutons)
- * Le reste (police, tailles) hérite automatiquement du thème du site.
+ * Valeurs reprises du :root du site (bleu #0d4995, polices Outfit/Montserrat,
+ * rayon 8px, ombres teintées bleu) pour que le widget se fonde dans les
+ * pages du site plutôt que d'imposer un style générique.
+ *
+ * Ce sont les mêmes noms de variables que le plugin "Prise de RDV Devis"
+ * (agendas Google Calendar) : reportez les mêmes valeurs dans les deux
+ * fichiers CSS pour que les deux widgets restent visuellement identiques.
+ *
+ * Pour ré-accorder le widget si la charte du site change : mettez à jour
+ * les 8 valeurs ci-dessous avec les nouvelles valeurs de :root sur
+ * lion-renovation.fr (variables --blue, --blue-dark, --ink, --muted,
+ * --line, --off, --r).
  * ==========================================================================
  */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Montserrat:wght@300;400;500;600;700&display=swap');
+
 .lion-rdv-widget {
-	--lion-rdv-primary: #c0272d;
-	--lion-rdv-primary-dark: #98181d;
-	--lion-rdv-text: inherit;
-	--lion-rdv-muted: #6b7280;
-	--lion-rdv-border: #e2e2e2;
-	--lion-rdv-bg: transparent;
-	--lion-rdv-bg-soft: rgba(0, 0, 0, 0.03);
+	--lion-rdv-primary: #0d4995;
+	--lion-rdv-primary-dark: #082d5c;
+	--lion-rdv-text: #1a1f2e;
+	--lion-rdv-muted: #5a6275;
+	--lion-rdv-border: rgba(26, 31, 46, 0.1);
+	--lion-rdv-bg: #ffffff;
+	--lion-rdv-bg-soft: #f7f8fc;
 	--lion-rdv-radius: 8px;
 
-	max-width: 640px;
+	/* Touches de marque supplémentaires (barre "brand-bar" et teintes
+	   sémantiques succès/erreur) : pas exposées comme variables
+	   personnalisables séparées pour rester sur les mêmes 8 variables que
+	   le plugin devis, mais regroupées ici pour rester faciles à
+	   retrouver si la charte évolue. */
+	--lion-rdv-amber: #ed8d0b;
+	--lion-rdv-terra: #964f40;
+	--lion-rdv-navy: #253575;
+
+	max-width: 720px;
 	margin: 0 auto;
-	font-family: inherit;
+	font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 	font-size: 1rem;
 	line-height: 1.5;
 	color: var(--lion-rdv-text);
 	box-sizing: border-box;
+	-webkit-font-smoothing: antialiased;
 }
 
 .lion-rdv-widget *,
@@ -36,22 +56,173 @@
 .lion-rdv-widget h2,
 .lion-rdv-widget h3 {
 	margin: 0 0 1rem;
-	font-size: 1.15em;
-	font-family: inherit;
-	font-weight: 600;
-	color: inherit;
+	font-size: 1.3em;
+	font-family: 'Outfit', 'Montserrat', sans-serif;
+	font-weight: 900;
+	letter-spacing: -0.02em;
+	line-height: 1.15;
+	color: var(--lion-rdv-text);
+}
+
+@keyframes lion-rdv-fade-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes lion-rdv-pop-in {
+	from {
+		opacity: 0;
+		transform: scale(0.7);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes lion-rdv-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lion-rdv-step,
+	.lion-rdv-confirmation .lion-rdv-icon {
+		animation: none !important;
+	}
 }
 
 .lion-rdv-step {
-	/* Pas de fond ni de bordure par défaut : le widget se fond dans la mise
-	   en page du thème plutôt que de s'afficher comme une boîte à part.
-	   Ajoutez background/border ici si vous préférez un encart visible. */
-	padding: 0;
+	/* Encart blanc arrondi avec ombre teintée bleu, sur le même modèle que
+	   .request-form (le formulaire de contact du site) : rayon 16px (le
+	   double du rayon standard --lion-rdv-radius, réservé aux gros
+	   conteneurs sur le site), ombre bleutée plutôt que grise. */
+	background: var(--lion-rdv-bg);
+	border: 1px solid var(--lion-rdv-border);
+	border-radius: 16px;
+	padding: 2.5rem 2.25rem;
+	box-shadow: 0 4px 24px rgba(13, 73, 149, 0.1);
+	animation: lion-rdv-fade-in 0.25s ease both;
+}
+
+@media (max-width: 560px) {
+	.lion-rdv-step {
+		padding: 1.5rem 1.25rem;
+		border-radius: 12px;
+	}
+}
+
+.lion-rdv-brand-bar {
+	display: flex;
+	gap: 3px;
+	margin-bottom: 1.1rem;
+}
+
+.lion-rdv-brand-bar span {
+	width: 8px;
+	height: 22px;
+	border-radius: 2px;
+	transform: skewX(-16deg);
+}
+
+.lion-rdv-brand-bar span:nth-child(1) {
+	background: var(--lion-rdv-amber);
+}
+
+.lion-rdv-brand-bar span:nth-child(2) {
+	background: var(--lion-rdv-terra);
+}
+
+.lion-rdv-brand-bar span:nth-child(3) {
+	background: var(--lion-rdv-primary);
+}
+
+.lion-rdv-brand-bar span:nth-child(4) {
+	background: var(--lion-rdv-navy);
+}
+
+/* ---- Indicateur d'étape (Service > Créneau > Coordonnées) ---- */
+
+.lion-rdv-progress {
+	display: flex;
+	margin-bottom: 1.75rem;
+}
+
+.lion-rdv-progress-step {
+	position: relative;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+}
+
+.lion-rdv-progress-step:not(:last-child)::after {
+	content: '';
+	position: absolute;
+	top: 13px;
+	left: 50%;
+	width: 100%;
+	height: 2px;
+	background: var(--lion-rdv-border);
+}
+
+.lion-rdv-progress-step.is-done:not(:last-child)::after {
+	background: var(--lion-rdv-primary);
+}
+
+.lion-rdv-progress-dot {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	margin-bottom: 0.4rem;
+	border: 2px solid var(--lion-rdv-border);
+	border-radius: 50%;
+	background: var(--lion-rdv-bg);
+	color: var(--lion-rdv-muted);
+	font-family: 'Outfit', sans-serif;
+	font-size: 0.8rem;
+	font-weight: 800;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.lion-rdv-progress-step.is-active .lion-rdv-progress-dot {
+	border-color: var(--lion-rdv-primary);
+	color: var(--lion-rdv-primary);
+}
+
+.lion-rdv-progress-step.is-done .lion-rdv-progress-dot {
+	border-color: var(--lion-rdv-primary);
+	background: var(--lion-rdv-primary);
+	color: #fff;
+}
+
+.lion-rdv-progress-label {
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--lion-rdv-muted);
+}
+
+.lion-rdv-progress-step.is-active .lion-rdv-progress-label {
+	color: var(--lion-rdv-primary);
 }
 
 .lion-rdv-service-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 	gap: 1rem;
 }
 
@@ -64,6 +235,12 @@
 .lion-rdv-service-card {
 	display: block;
 	width: 100%;
+	/* Sans ça, un item de grille CSS ne peut jamais devenir plus étroit que
+	   le texte le plus long qu'il contient (min-width intrinsèque = "auto"
+	   par défaut sur un enfant de grille) : avec un libellé long, le bouton
+	   déborde de sa colonne au lieu de laisser le texte passer à la ligne. */
+	min-width: 0;
+	box-sizing: border-box;
 	text-align: left;
 	background: var(--lion-rdv-bg-soft);
 	border: 2px solid var(--lion-rdv-border);
@@ -72,33 +249,58 @@
 	cursor: pointer;
 	font: inherit;
 	color: inherit;
-	transition: border-color 0.15s ease, transform 0.05s ease;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .lion-rdv-service-card:hover,
 .lion-rdv-service-card:focus-visible {
 	border-color: var(--lion-rdv-primary);
+	box-shadow: 0 6px 20px rgba(13, 73, 149, 0.14);
+	transform: translateY(-2px);
+}
+
+.lion-rdv-service-card:focus-visible {
+	outline: 2px solid var(--lion-rdv-primary);
+	outline-offset: 2px;
+}
+
+.lion-rdv-service-card:active {
+	transform: translateY(0);
+	box-shadow: none;
 }
 
 .lion-rdv-service-card strong {
 	display: block;
+	font-family: 'Outfit', sans-serif;
 	font-size: 1.05rem;
+	font-weight: 800;
 	margin-bottom: 0.25rem;
+	overflow-wrap: break-word;
 }
 
 .lion-rdv-service-card span {
+	display: block;
 	color: var(--lion-rdv-muted);
-	font-size: 0.9rem;
+	font-size: 0.88rem;
+	overflow-wrap: break-word;
 }
 
 .lion-rdv-back {
+	display: inline-flex;
+	align-items: center;
 	background: none;
 	border: none;
 	color: var(--lion-rdv-primary);
 	font: inherit;
+	font-weight: 700;
 	cursor: pointer;
 	padding: 0;
 	margin-bottom: 1rem;
+	transition: transform 0.15s ease;
+}
+
+.lion-rdv-back:hover {
+	transform: translateX(-2px);
 }
 
 .lion-rdv-days {
@@ -109,18 +311,26 @@
 }
 
 .lion-rdv-day-btn {
-	border: 1px solid var(--lion-rdv-border);
+	border: 1.5px solid var(--lion-rdv-border);
 	background: var(--lion-rdv-bg-soft);
-	border-radius: 8px;
-	padding: 0.5rem 0.85rem;
+	border-radius: 999px;
+	padding: 0.5rem 1rem;
 	font: inherit;
-	font-size: 0.9rem;
+	font-size: 0.85rem;
+	font-weight: 700;
+	color: var(--lion-rdv-muted);
 	cursor: pointer;
 	text-transform: capitalize;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
-.lion-rdv-day-btn.is-active,
 .lion-rdv-day-btn:hover {
+	border-color: var(--lion-rdv-primary);
+	color: var(--lion-rdv-primary);
+	transform: translateY(-1px);
+}
+
+.lion-rdv-day-btn.is-active {
 	background: var(--lion-rdv-primary);
 	border-color: var(--lion-rdv-primary);
 	color: #fff;
@@ -133,23 +343,29 @@
 }
 
 .lion-rdv-slot-btn {
-	border: 1px solid var(--lion-rdv-border);
+	border: 1.5px solid var(--lion-rdv-border);
 	background: var(--lion-rdv-bg);
-	border-radius: 8px;
-	padding: 0.6rem 0.5rem;
+	border-radius: var(--lion-rdv-radius);
+	padding: 0.65rem 0.5rem;
 	font: inherit;
 	font-size: 0.9rem;
+	font-weight: 700;
+	color: var(--lion-rdv-text);
 	cursor: pointer;
+	transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .lion-rdv-slot-btn:hover,
 .lion-rdv-slot-btn:focus-visible {
 	border-color: var(--lion-rdv-primary);
 	color: var(--lion-rdv-primary);
+	box-shadow: 0 4px 12px rgba(13, 73, 149, 0.12);
+	transform: translateY(-1px);
 }
 
 .lion-rdv-summary {
 	background: var(--lion-rdv-bg-soft);
+	border-left: 3px solid var(--lion-rdv-primary);
 	border-radius: var(--lion-rdv-radius);
 	padding: 0.9rem 1rem;
 	margin-bottom: 1.25rem;
@@ -174,25 +390,40 @@
 
 .lion-rdv-field label {
 	display: block;
-	font-size: 0.85rem;
-	margin-bottom: 0.3rem;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	margin-bottom: 0.4rem;
 	color: var(--lion-rdv-muted);
 }
 
 .lion-rdv-field input,
 .lion-rdv-field textarea {
 	width: 100%;
-	padding: 0.6rem 0.7rem;
-	border: 1px solid var(--lion-rdv-border);
-	border-radius: 8px;
-	font: inherit;
-	font-size: 0.95rem;
+	padding: 0.75rem 0.85rem;
+	border: 1.5px solid var(--lion-rdv-border);
+	border-radius: var(--lion-rdv-radius);
+	font-family: inherit;
+	font-size: 1rem;
+	color: var(--lion-rdv-text);
+	background: var(--lion-rdv-bg);
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lion-rdv-field input:hover,
+.lion-rdv-field textarea:hover {
+	border-color: var(--lion-rdv-muted);
 }
 
 .lion-rdv-field input:focus,
 .lion-rdv-field textarea:focus {
-	outline: 2px solid var(--lion-rdv-primary);
-	outline-offset: 1px;
+	outline: none;
+	border-color: var(--lion-rdv-primary);
+	/* color-mix() est ignoré par les navigateurs qui ne le supportent pas :
+	   la déclaration juste au-dessus reste alors le seul filet visible. */
+	box-shadow: 0 0 0 3px rgba(13, 73, 149, 0.1);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--lion-rdv-primary) 20%, transparent);
 }
 
 .lion-rdv-honeypot {
@@ -205,55 +436,120 @@
 
 .lion-rdv-submit {
 	margin-top: 1.25rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
 	background: var(--lion-rdv-primary);
 	color: #fff;
-	border: none;
-	border-radius: 8px;
-	padding: 0.75rem 1.5rem;
-	font: inherit;
-	font-size: 1rem;
-	font-weight: 600;
+	border: 2px solid var(--lion-rdv-primary);
+	border-radius: var(--lion-rdv-radius);
+	padding: 0.9rem 1.5rem;
+	font-family: inherit;
+	font-size: 0.95rem;
+	font-weight: 700;
 	cursor: pointer;
 	width: 100%;
+	min-height: 54px;
+	transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.lion-rdv-submit:hover {
+.lion-rdv-submit:hover:not(:disabled) {
 	background: var(--lion-rdv-primary-dark);
+	border-color: var(--lion-rdv-primary-dark);
+	box-shadow: 0 4px 20px rgba(13, 73, 149, 0.25);
+	transform: translateY(-1px);
+}
+
+.lion-rdv-submit:active:not(:disabled) {
+	transform: translateY(0);
 }
 
 .lion-rdv-submit:disabled {
 	opacity: 0.6;
 	cursor: not-allowed;
+	box-shadow: none;
 }
 
 .lion-rdv-message {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.5rem;
 	padding: 0.9rem 1rem;
-	border-radius: 8px;
+	border-radius: var(--lion-rdv-radius);
+	border-left: 3px solid transparent;
 	margin-bottom: 1rem;
-	font-size: 0.9rem;
+	font-size: 0.88rem;
 }
 
+.lion-rdv-message::before {
+	flex: none;
+	font-weight: 700;
+}
+
+/* Erreur : teinte terracotta, la couleur que le site réserve lui-même aux
+   messages d'urgence/d'attention (dépannage, bandeau urgent). */
 .lion-rdv-message.is-error {
-	background: #fdecea;
-	color: #9d2126;
+	background: rgba(150, 79, 64, 0.08);
+	border-left-color: var(--lion-rdv-terra);
+	color: var(--lion-rdv-terra);
 }
 
+.lion-rdv-message.is-error::before {
+	content: '⚠';
+}
+
+/* Succès : même traitement que .form-confirm sur le site (encart bleu,
+   pas vert) pour rester cohérent avec la confirmation de leur propre
+   formulaire de contact. */
 .lion-rdv-message.is-success {
-	background: #eaf6ec;
-	color: #1a7f37;
+	background: rgba(13, 73, 149, 0.08);
+	border-left-color: var(--lion-rdv-primary);
+	color: var(--lion-rdv-primary-dark);
+}
+
+.lion-rdv-message.is-success::before {
+	content: '✓';
 }
 
 .lion-rdv-confirmation {
 	text-align: center;
-	padding: 2rem 1rem;
+	padding: 0.5rem 0;
 }
 
 .lion-rdv-confirmation .lion-rdv-icon {
-	font-size: 2.5rem;
-	margin-bottom: 0.75rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 64px;
+	height: 64px;
+	margin: 0 auto 1rem;
+	border-radius: 50%;
+	background: var(--lion-rdv-primary);
+	color: #fff;
+	font-size: 1.75rem;
+	box-shadow: 0 8px 24px rgba(13, 73, 149, 0.3);
+	animation: lion-rdv-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.lion-rdv-confirmation p {
+	font-size: 1.05rem;
 }
 
 .lion-rdv-loading {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
 	color: var(--lion-rdv-muted);
 	padding: 1rem 0;
+}
+
+.lion-rdv-spinner {
+	flex: none;
+	width: 18px;
+	height: 18px;
+	border: 2px solid var(--lion-rdv-border);
+	border-top-color: var(--lion-rdv-primary);
+	border-radius: 50%;
+	animation: lion-rdv-spin 0.7s linear infinite;
 }
